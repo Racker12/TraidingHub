@@ -1,267 +1,267 @@
 {
   "ABEA|1D": {
-    "checked_at": "2026-04-28T17:00:48.887983+00:00",
-    "price": 349.545013,
-    "rsi": 70.85,
+    "checked_at": "2026-04-28T18:26:08.240363+00:00",
+    "price": 349.924988,
+    "rsi": 71.27,
     "ticker": "GOOGL",
     "zone": "overbought"
   },
   "ABEA|4H": {
-    "checked_at": "2026-04-28T17:00:48.804519+00:00",
-    "price": 349.545013,
-    "rsi": 72.33,
+    "checked_at": "2026-04-28T18:26:07.991902+00:00",
+    "price": 349.924988,
+    "rsi": 72.63,
     "ticker": "GOOGL",
     "zone": "overbought"
   },
   "AMZ|1D": {
-    "checked_at": "2026-04-28T17:00:49.090811+00:00",
-    "price": 259.325012,
-    "rsi": 73.18,
+    "checked_at": "2026-04-28T18:26:08.904149+00:00",
+    "price": 259.595001,
+    "rsi": 73.57,
     "ticker": "AMZN",
     "zone": "overbought"
   },
   "AMZ|4H": {
-    "checked_at": "2026-04-28T17:00:49.016398+00:00",
-    "price": 259.325012,
-    "rsi": 67.37,
+    "checked_at": "2026-04-28T18:26:08.577902+00:00",
+    "price": 259.595001,
+    "rsi": 67.95,
     "ticker": "AMZN",
     "zone": "neutral"
   },
   "APC|1D": {
-    "checked_at": "2026-04-28T17:00:49.414073+00:00",
-    "price": 270.01001,
-    "rsi": 57.62,
+    "checked_at": "2026-04-28T18:26:09.572759+00:00",
+    "price": 270.61499,
+    "rsi": 58.18,
     "ticker": "AAPL",
     "zone": "neutral"
   },
   "APC|4H": {
-    "checked_at": "2026-04-28T17:00:49.290743+00:00",
-    "price": 270.016388,
-    "rsi": 56.15,
+    "checked_at": "2026-04-28T18:26:09.323470+00:00",
+    "price": 270.61499,
+    "rsi": 57.04,
     "ticker": "AAPL",
     "zone": "neutral"
   },
   "BTC|1D": {
-    "checked_at": "2026-04-28T17:00:49.663577+00:00",
-    "price": 76147.359375,
-    "rsi": 55.26,
+    "checked_at": "2026-04-28T18:26:10.117908+00:00",
+    "price": 76224.726562,
+    "rsi": 55.53,
     "ticker": "BTC-USD",
     "zone": "neutral"
   },
   "BTC|4H": {
-    "checked_at": "2026-04-28T17:00:49.590221+00:00",
-    "price": 76147.359375,
-    "rsi": 39.26,
+    "checked_at": "2026-04-28T18:26:09.937829+00:00",
+    "price": 76224.726562,
+    "rsi": 40.1,
     "ticker": "BTC-USD",
     "zone": "neutral"
   },
   "BYD|1D": {
-    "checked_at": "2026-04-28T17:00:49.911599+00:00",
+    "checked_at": "2026-04-28T18:26:10.785414+00:00",
     "price": 106.0,
     "rsi": 51.18,
     "ticker": "1211.HK",
     "zone": "neutral"
   },
   "BYD|4H": {
-    "checked_at": "2026-04-28T17:00:49.814400+00:00",
+    "checked_at": "2026-04-28T18:26:10.477831+00:00",
     "price": 103.699997,
     "rsi": 45.04,
     "ticker": "1211.HK",
     "zone": "neutral"
   },
   "ETH|1D": {
-    "checked_at": "2026-04-28T17:00:50.164332+00:00",
-    "price": 2286.389893,
-    "rsi": 51.19,
+    "checked_at": "2026-04-28T18:26:11.305025+00:00",
+    "price": 2294.399902,
+    "rsi": 51.83,
     "ticker": "ETH-USD",
     "zone": "neutral"
   },
   "ETH|4H": {
-    "checked_at": "2026-04-28T17:00:50.102799+00:00",
-    "price": 2286.389893,
-    "rsi": 42.79,
+    "checked_at": "2026-04-28T18:26:11.116335+00:00",
+    "price": 2294.399902,
+    "rsi": 44.99,
     "ticker": "ETH-USD",
     "zone": "neutral"
   },
   "EURUSD|1D": {
-    "checked_at": "2026-04-28T17:00:50.401086+00:00",
-    "price": 1.171372,
-    "rsi": 53.14,
+    "checked_at": "2026-04-28T18:26:11.911097+00:00",
+    "price": 1.171783,
+    "rsi": 53.5,
     "ticker": "EURUSD=X",
     "zone": "neutral"
   },
   "EURUSD|4H": {
-    "checked_at": "2026-04-28T17:00:50.338517+00:00",
-    "price": 1.171372,
-    "rsi": 47.5,
+    "checked_at": "2026-04-28T18:26:11.707104+00:00",
+    "price": 1.171783,
+    "rsi": 48.74,
     "ticker": "EURUSD=X",
     "zone": "neutral"
   },
   "GBPUSD|1D": {
-    "checked_at": "2026-04-28T17:00:50.677442+00:00",
-    "price": 1.351516,
-    "rsi": 55.98,
+    "checked_at": "2026-04-28T18:26:12.689919+00:00",
+    "price": 1.351972,
+    "rsi": 56.29,
     "ticker": "GBPUSD=X",
     "zone": "neutral"
   },
   "GBPUSD|4H": {
-    "checked_at": "2026-04-28T17:00:50.596115+00:00",
-    "price": 1.351516,
-    "rsi": 50.0,
+    "checked_at": "2026-04-28T18:26:12.428109+00:00",
+    "price": 1.351972,
+    "rsi": 50.98,
     "ticker": "GBPUSD=X",
     "zone": "neutral"
   },
   "MSF|1D": {
-    "checked_at": "2026-04-28T17:00:50.941918+00:00",
-    "price": 428.529999,
-    "rsi": 65.12,
+    "checked_at": "2026-04-28T18:26:13.308849+00:00",
+    "price": 426.670013,
+    "rsi": 64.35,
     "ticker": "MSFT",
     "zone": "neutral"
   },
   "MSF|4H": {
-    "checked_at": "2026-04-28T17:00:50.851233+00:00",
-    "price": 428.529999,
-    "rsi": 65.33,
+    "checked_at": "2026-04-28T18:26:13.101185+00:00",
+    "price": 426.684998,
+    "rsi": 63.2,
     "ticker": "MSFT",
     "zone": "neutral"
   },
   "NASDAQ|1D": {
-    "checked_at": "2026-04-28T17:00:51.176414+00:00",
-    "price": 27053.25,
-    "rsi": 67.38,
+    "checked_at": "2026-04-28T18:26:13.924812+00:00",
+    "price": 27146.5,
+    "rsi": 69.18,
     "ticker": "NQ=F",
     "zone": "neutral"
   },
   "NASDAQ|4H": {
-    "checked_at": "2026-04-28T17:00:51.110550+00:00",
-    "price": 27053.25,
-    "rsi": 44.49,
+    "checked_at": "2026-04-28T18:26:13.758007+00:00",
+    "price": 27144.75,
+    "rsi": 48.56,
     "ticker": "NQ=F",
     "zone": "neutral"
   },
   "NVD|1D": {
-    "checked_at": "2026-04-28T17:00:51.369410+00:00",
-    "price": 210.710007,
-    "rsi": 67.63,
+    "checked_at": "2026-04-28T18:26:15.157830+00:00",
+    "price": 212.934998,
+    "rsi": 70.65,
     "ticker": "NVDA",
-    "zone": "neutral"
+    "zone": "overbought"
   },
   "NVD|4H": {
-    "checked_at": "2026-04-28T17:00:51.271165+00:00",
-    "price": 210.710007,
-    "rsi": 65.8,
+    "checked_at": "2026-04-28T18:26:14.338568+00:00",
+    "price": 212.934998,
+    "rsi": 67.81,
     "ticker": "NVDA",
     "zone": "neutral"
   },
   "PL|1D": {
-    "checked_at": "2026-04-28T17:00:51.554802+00:00",
-    "price": 142.289993,
-    "rsi": 47.82,
+    "checked_at": "2026-04-28T18:26:15.729028+00:00",
+    "price": 141.699997,
+    "rsi": 47.27,
     "ticker": "PLTR",
     "zone": "neutral"
   },
   "PL|4H": {
-    "checked_at": "2026-04-28T17:00:51.495962+00:00",
-    "price": 142.289993,
-    "rsi": 47.96,
+    "checked_at": "2026-04-28T18:26:15.528157+00:00",
+    "price": 141.699997,
+    "rsi": 46.87,
     "ticker": "PLTR",
     "zone": "neutral"
   },
   "RheinmetallAG|1D": {
-    "checked_at": "2026-04-28T17:00:51.841943+00:00",
+    "checked_at": "2026-04-28T18:26:16.299433+00:00",
     "price": 1343.199951,
     "rsi": 35.13,
     "ticker": "RHM.DE",
     "zone": "neutral"
   },
   "RheinmetallAG|4H": {
-    "checked_at": "2026-04-28T17:00:51.721331+00:00",
+    "checked_at": "2026-04-28T18:26:16.088805+00:00",
     "price": 1339.0,
     "rsi": 31.76,
     "ticker": "RHM.DE",
     "zone": "neutral"
   },
   "SI|1D": {
-    "checked_at": "2026-04-28T17:00:52.044060+00:00",
-    "price": 73.705002,
-    "rsi": 44.22,
+    "checked_at": "2026-04-28T18:26:16.846127+00:00",
+    "price": 73.739998,
+    "rsi": 44.28,
     "ticker": "SI=F",
     "zone": "neutral"
   },
   "SI|4H": {
-    "checked_at": "2026-04-28T17:00:51.983888+00:00",
-    "price": 73.705002,
-    "rsi": 39.89,
+    "checked_at": "2026-04-28T18:26:16.640267+00:00",
+    "price": 73.739998,
+    "rsi": 40.1,
     "ticker": "SI=F",
     "zone": "neutral"
   },
   "SOL|1D": {
-    "checked_at": "2026-04-28T17:00:52.310988+00:00",
-    "price": 83.599998,
-    "rsi": 45.77,
+    "checked_at": "2026-04-28T18:26:17.579850+00:00",
+    "price": 83.769997,
+    "rsi": 46.11,
     "ticker": "SOL-USD",
     "zone": "neutral"
   },
   "SOL|4H": {
-    "checked_at": "2026-04-28T17:00:52.239986+00:00",
-    "price": 83.599998,
-    "rsi": 36.15,
+    "checked_at": "2026-04-28T18:26:17.405123+00:00",
+    "price": 83.769997,
+    "rsi": 37.82,
     "ticker": "SOL-USD",
     "zone": "neutral"
   },
   "Tesla|1D": {
-    "checked_at": "2026-04-28T17:00:52.487276+00:00",
-    "price": 377.208588,
-    "rsi": 49.33,
+    "checked_at": "2026-04-28T18:26:18.181329+00:00",
+    "price": 376.980011,
+    "rsi": 49.21,
     "ticker": "TSLA",
     "zone": "neutral"
   },
   "Tesla|4H": {
-    "checked_at": "2026-04-28T17:00:52.424818+00:00",
-    "price": 377.195007,
-    "rsi": 49.69,
+    "checked_at": "2026-04-28T18:26:17.973374+00:00",
+    "price": 376.980011,
+    "rsi": 49.53,
     "ticker": "TSLA",
     "zone": "neutral"
   },
   "USDJPY|1D": {
-    "checked_at": "2026-04-28T17:00:52.708291+00:00",
-    "price": 159.550995,
-    "rsi": 55.17,
+    "checked_at": "2026-04-28T18:26:18.777851+00:00",
+    "price": 159.531998,
+    "rsi": 54.98,
     "ticker": "JPY=X",
     "zone": "neutral"
   },
   "USDJPY|4H": {
-    "checked_at": "2026-04-28T17:00:52.634442+00:00",
-    "price": 159.550995,
-    "rsi": 53.71,
+    "checked_at": "2026-04-28T18:26:18.597772+00:00",
+    "price": 159.531006,
+    "rsi": 53.24,
     "ticker": "JPY=X",
     "zone": "neutral"
   },
   "VWCE|1D": {
-    "checked_at": "2026-04-28T17:00:52.947547+00:00",
+    "checked_at": "2026-04-28T18:26:19.385971+00:00",
     "price": 152.880005,
     "rsi": 63.71,
     "ticker": "VWCE.DE",
     "zone": "neutral"
   },
   "VWCE|4H": {
-    "checked_at": "2026-04-28T17:00:52.824028+00:00",
+    "checked_at": "2026-04-28T18:26:19.203297+00:00",
     "price": 152.960007,
     "rsi": 54.51,
     "ticker": "VWCE.DE",
     "zone": "neutral"
   },
   "XAU|1D": {
-    "checked_at": "2026-04-28T17:00:53.124355+00:00",
-    "price": 4602.600098,
-    "rsi": 41.23,
+    "checked_at": "2026-04-28T18:26:19.884422+00:00",
+    "price": 4611.200195,
+    "rsi": 41.64,
     "ticker": "GC=F",
     "zone": "neutral"
   },
   "XAU|4H": {
-    "checked_at": "2026-04-28T17:00:53.062290+00:00",
-    "price": 4602.600098,
-    "rsi": 34.03,
+    "checked_at": "2026-04-28T18:26:19.733001+00:00",
+    "price": 4611.200195,
+    "rsi": 35.74,
     "ticker": "GC=F",
     "zone": "neutral"
   }
