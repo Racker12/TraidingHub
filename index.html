@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Forex Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-glow page-glow-one"></div>
+  <div class="page-glow page-glow-two"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon">FX</span>
+      <div>
+        <p class="eyebrow">Trading Dashboard</p>
+        <h1>Forex Tools</h1>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div id="sessions" class="sessions"></div>
+      <div class="time-card">
+        <span>Local Time</span>
+        <div id="localTime" class="local-time"></div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="home" class="screen active home-screen">
+      <section class="hero-card">
+        <p class="eyebrow">Smooth. Clean. Focused.</p>
+        <h2>Dein Trading-Hub für schnelle Entscheidungen.</h2>
+        <p class="hero-text">SL-Rechner, Marktzeiten, Signal-Check, Order-Rechner, Saisonalitätsdaten, News-Links und Live-Charts an einem Ort — optisch aufgeräumt und modern.</p>
+      </section>
+
+      <section class="app-grid" aria-label="Forex Tools">
+        <div class="app" onclick="openApp('slApp')">
+          <span class="app-icon">◎</span>
+          <div>
+            <h3>Forex SL Rechner</h3>
+            <p>Positionsgröße schnell berechnen</p>
+          </div>
+        </div>
+        <div class="app" onclick="openApp('newsApp')">
+          <span class="app-icon">✦</span>
+          <div>
+            <h3>Forex News</h3>
+            <p>Kalender & News-Quellen</p>
+          </div>
+        </div>
+        <div class="app" onclick="openApp('tradingApp')">
+          <span class="app-icon">⌁</span>
+          <div>
+            <h3>Live Charts</h3>
+            <p>TradingView Charts öffnen</p>
+          </div>
+        </div>
+        <div class="app" onclick="openApp('ftmoApp')">
+          <span class="app-icon">◇</span>
+          <div>
+            <h3>FTMO-Acc</h3>
+            <p>Account-Übersicht öffnen</p>
+          </div>
+        </div>
+        <div class="app" onclick="openApp('signalApp')">
+          <span class="app-icon">◈</span>
+          <div>
+            <h3>Signal Check</h3>
+            <p>Indikatoren zu Bias bündeln</p>
+          </div>
+        </div>
+        <div class="app" onclick="openApp('orderApp')">
+          <span class="app-icon">∑</span>
+          <div>
+            <h3>Order Rechner</h3>
+            <p>Kauf, Teilverkauf & Gewinn berechnen</p>
+          </div>
+        </div>
+        <div class="app" onclick="openApp('seasonalityApp')">
+          <span class="app-icon">⌬</span>
+          <div>
+            <h3>Seasonality Daten</h3>
+            <p>GitHub-Daten & Saisonalität anzeigen</p>
+          </div>
+        </div>
+        <div class="app" onclick="openApp('telegramApp')">
+          <span class="app-icon">↗</span>
+          <div>
+            <h3>Telegram Bot</h3>
+            <p>Alert-Vorlagen vorbereiten</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="slApp" class="screen tool-screen">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <section class="panel">
+        <div class="panel-header">
+          <p class="eyebrow">Risk Management</p>
+          <h2>Forex SL Rechner</h2>
+          <p>Berechne deine empfohlene Positionsgröße über SL-Betrag und Abstand. Der Rechner prüft auch ungültige Eingaben, damit keine fehlerhaften Lots entstehen.</p>
+        </div>
+
+        <div class="form-grid">
+          <label>Handelspaar
+            <select id="pair">
+              <option>EUR/USD</option>
+              <option>USD/JPY</option>
+              <option>GBP/USD</option>
+              <option>USD/CHF</option>
+              <option>AUD/USD</option>
+              <option>USD/CAD</option>
+              <option>NZD/USD</option>
+              <option>EUR/JPY</option>
+              <option>GBP/JPY</option>
+              <option>EUR/GBP</option>
+            </select>
+          </label>
+
+          <label>Gewünschter SL-Betrag
+            <div class="inline-field">
+              <input type="number" id="slValue" placeholder="z.B. 50" min="0" step="0.01"/>
+              <select id="slCurrency">
+                <option>EUR</option>
+                <option>USD</option>
+              </select>
+            </div>
+          </label>
+
+          <label>SL-Abstand
+            <div class="inline-field">
+              <input type="number" id="slDistance" placeholder="z.B. 20" min="0" step="0.01"/>
+              <select id="slType">
+                <option value="pips">Pips</option>
+                <option value="percent">Prozent</option>
+              </select>
+            </div>
+          </label>
+        </div>
+
+        <button class="primary-btn" onclick="calculateSL()">Berechnen</button>
+        <div id="result" class="result-card"></div>
+      </section>
+    </div>
+
+    <div id="newsApp" class="screen tool-screen">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <section class="panel">
+        <div class="panel-header">
+          <p class="eyebrow">Market News</p>
+          <h2>News & Kalender</h2>
+          <p>Wichtige Quellen für Nachrichten, Kalender und Marktüberblick. Öffnet jeweils in einem neuen Tab.</p>
+        </div>
+        <div class="link-grid">
+          <a href="https://www.forexfactory.com" target="_blank" class="external-link">ForexFactory öffnen</a>
+          <a href="https://www.investing.com/economic-calendar/" target="_blank" class="external-link">Economic Calendar</a>
+          <a href="https://www.myfxbook.com/forex-economic-calendar" target="_blank" class="external-link">Myfxbook Kalender</a>
+          <a href="https://www.tradingview.com/markets/currencies/news/" target="_blank" class="external-link">TradingView News</a>
+        </div>
+      </section>
+    </div>
+
+    <div id="ftmoApp" class="screen tool-screen">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <section class="panel small-panel">
+        <div class="panel-header">
+          <p class="eyebrow">Account</p>
+          <h2>FTMO Account</h2>
+          <p>Spring direkt in deine FTMO Account-Übersicht.</p>
+        </div>
+        <p><a href="https://trader.ftmo.com/accounts-overview" target="_blank" class="external-link">FTMO öffnen</a></p>
+      </section>
+    </div>
+
+    <div id="tradingApp" class="screen tool-screen">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <section class="panel chart-panel">
+        <div class="panel-header chart-header">
+          <div>
+            <p class="eyebrow">Live Market</p>
+            <h2>Live Forex Charts</h2>
+          </div>
+          <div class="chart-controls">
+            <label for="chartPair">Währungspaar
+              <select id="chartPair">
+                <option value="OANDA:EURUSD">EUR/USD</option>
+                <option value="OANDA:USDJPY">USD/JPY</option>
+                <option value="OANDA:GBPUSD">GBP/USD</option>
+                <option value="OANDA:USDCHF">USD/CHF</option>
+                <option value="OANDA:AUDUSD">AUD/USD</option>
+                <option value="OANDA:USDCAD">USD/CAD</option>
+                <option value="OANDA:NZDUSD">NZD/USD</option>
+                <option value="OANDA:EURJPY">EUR/JPY</option>
+                <option value="OANDA:GBPJPY">GBP/JPY</option>
+                <option value="OANDA:EURGBP">EUR/GBP</option>
+              </select>
+            </label>
+            <button class="primary-btn compact" onclick="updateChartSymbol()">Chart aktualisieren</button>
+          </div>
+        </div>
+
+        <div class="tv-widget-container">
+          <div id="tradingview_chart"></div>
+        </div>
+        <p id="chartStatus" class="helper-text"></p>
+      </section>
+    </div>
+
+    <div id="signalApp" class="screen tool-screen">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <section class="panel">
+        <div class="panel-header">
+          <p class="eyebrow">Confluence</p>
+          <h2>Signal Check</h2>
+          <p>Kein echtes Finanzsignal, sondern ein strukturierter Check: Trend, RSI, MACD und News-Risiko werden zu einem Bias zusammengefasst.</p>
+        </div>
+
+        <div class="form-grid four-cols">
+          <label>Trend / EMA
+            <select id="signalTrend">
+              <option value="bullish">Preis über EMA / Aufwärtstrend</option>
+              <option value="neutral">Seitwärts / unklar</option>
+              <option value="bearish">Preis unter EMA / Abwärtstrend</option>
+            </select>
+          </label>
+          <label>RSI
+            <select id="signalRsi">
+              <option value="bullish">Unter 35 / eher Long-Rebound</option>
+              <option value="neutral">35 bis 65 / neutral</option>
+              <option value="bearish">Über 65 / eher Short-Rebound</option>
+            </select>
+          </label>
+          <label>MACD
+            <select id="signalMacd">
+              <option value="bullish">Bullish Cross / Momentum hoch</option>
+              <option value="neutral">Flach / unklar</option>
+              <option value="bearish">Bearish Cross / Momentum runter</option>
+            </select>
+          </label>
+          <label>News-Risiko
+            <select id="signalNews">
+              <option value="clear">Keine High-Impact News nah</option>
+              <option value="medium">News später / mittel</option>
+              <option value="danger">High-Impact News nah</option>
+            </select>
+          </label>
+        </div>
+
+        <button class="primary-btn" onclick="calculateSignalCheck()">Bias berechnen</button>
+        <div id="signalResult" class="result-card result-large"></div>
+      </section>
+    </div>
+
+    <div id="orderApp" class="screen tool-screen">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <section class="panel">
+        <div class="panel-header">
+          <p class="eyebrow">Position Management</p>
+          <h2>Order Rechner</h2>
+          <p>Berechne Kauf, Gebühren, mehrere Teilverkäufe, Restposition, realisierten Gewinn und offenen Gewinn/Verlust. Alles bleibt lokal im Browser.</p>
+        </div>
+
+        <div class="form-grid four-cols">
+          <label>Asset / Coin / Aktie
+            <input id="orderAsset" placeholder="z.B. BTC, Tesla, EUR/USD" />
+          </label>
+          <label>Kaufpreis pro Stück
+            <input id="orderBuyPrice" type="number" min="0" step="0.0001" placeholder="z.B. 100" oninput="calculateOrder()" />
+          </label>
+          <label>Gebühr Kauf (%)
+            <input id="orderBuyFee" type="number" min="0" step="0.01" value="0" oninput="calculateOrder()" />
+          </label>
+          <label>Gebühr Verkauf (%)
+            <input id="orderSellFee" type="number" min="0" step="0.01" value="0" oninput="calculateOrder()" />
+          </label>
+        </div>
+
+        <div class="form-grid four-cols">
+          <label>Kauf berechnen über
+            <select id="orderBuyMode" onchange="syncOrderBuyMode(); calculateOrder()">
+              <option value="quantity">Stückzahl</option>
+              <option value="invest">Investitionsbetrag</option>
+              <option value="portfolio">Portfolio-Prozent</option>
+            </select>
+          </label>
+          <label id="orderQuantityWrap">Stückzahl
+            <input id="orderQuantity" type="number" min="0" step="0.0001" placeholder="z.B. 10" oninput="calculateOrder()" />
+          </label>
+          <label id="orderInvestWrap">Investitionsbetrag (€)
+            <input id="orderInvest" type="number" min="0" step="0.01" placeholder="z.B. 1000" oninput="calculateOrder()" />
+          </label>
+          <label id="orderPortfolioWrap">Portfolio & Anteil
+            <div class="inline-field">
+              <input id="orderPortfolio" type="number" min="0" step="0.01" placeholder="Depot €" oninput="calculateOrder()" />
+              <input id="orderPortfolioPercent" type="number" min="0" max="100" step="0.1" placeholder="%" oninput="calculateOrder()" />
+            </div>
+          </label>
+        </div>
+
+        <div class="quick-row" aria-label="Schnellmengen">
+          <button class="chip-btn" onclick="setOrderQuantity(1)">1 Stk.</button>
+          <button class="chip-btn" onclick="setOrderQuantity(5)">5 Stk.</button>
+          <button class="chip-btn" onclick="setOrderQuantity(10)">10 Stk.</button>
+          <button class="chip-btn" onclick="setOrderQuantity(25)">25 Stk.</button>
+          <button class="chip-btn" onclick="setOrderQuantity(50)">50 Stk.</button>
+          <button class="chip-btn" onclick="setOrderQuantity(100)">100 Stk.</button>
+        </div>
+
+        <div class="split-card">
+          <div class="split-header">
+            <div>
+              <p class="eyebrow">Exits</p>
+              <h3>Teil Verkäufe</h3>
+            </div>
+            <button class="ghost-btn" onclick="addSellRow()">+ Verkauf hinzufügen</button>
+          </div>
+          <div id="sellRows" class="sell-rows"></div>
+        </div>
+
+        <div class="form-grid three-cols">
+          <label>Aktueller Preis für Restposition optional
+            <input id="orderCurrentPrice" type="number" min="0" step="0.0001" placeholder="z.B. 125" oninput="calculateOrder()" />
+          </label>
+          <label>Notiz optional
+            <input id="orderNote" placeholder="Setup / Plan / Ziel" />
+          </label>
+          <label>Aktion
+            <button class="primary-btn" onclick="calculateOrder()">Order berechnen</button>
+          </label>
+        </div>
+
+        <div id="orderResult" class="mini-stats order-stats"></div>
+        <div id="orderDetail" class="result-card result-large"></div>
+      </section>
+    </div>
+
+    <div id="seasonalityApp" class="screen tool-screen">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <section class="panel chart-panel seasonax-panel">
+        <div class="panel-header chart-header seasonax-header">
+          <div>
+            <p class="eyebrow">Seasonality</p>
+            <h2>Seasonality Analyse</h2>
+            <p>Wähle Asset und Zeitraum. Die App lädt automatisch die passende Datei aus <code>Data/</code> und zeigt Jahresverlauf, Monatsstärke und Weekly-Auswertung.</p>
+          </div>
+          <div class="seasonax-controls">
+            <label>Asset
+              <select id="seasonalityAsset" onchange="onSeasonalityAssetChange()"></select>
+            </label>
+            <label>Zeitraum
+              <select id="seasonalityVariant" onchange="loadSeasonalityData()"></select>
+            </label>
+          </div>
+        </div>
+
+        <div id="seasonalityStatus" class="helper-text"></div>
+
+        <div class="seasonality-dashboard">
+          <div class="seasonality-main-card">
+            <div class="seasonality-card-head">
+              <div>
+                <span class="mini-label">Jahresübersicht</span>
+                <h3 id="seasonalityTitle">Jahresverlauf</h3>
+              </div>
+              <div id="seasonalityMeta" class="seasonality-meta"></div>
+            </div>
+            <canvas id="seasonalityCanvas" width="1100" height="430"></canvas>
+          </div>
+
+          <aside class="seasonality-side-card">
+            <span class="mini-label">Quick Stats</span>
+            <div id="seasonalityStats" class="seasonality-stats-list"></div>
+            <div id="seasonalityInsight" class="result-card result-large"></div>
+          </aside>
+        </div>
+
+        <div class="seasonality-overviews">
+          <div class="seasonality-card">
+            <div class="seasonality-card-head compact-head">
+              <div>
+                <span class="mini-label">Monatsübersicht</span>
+                <h3>Durchschnitt pro Monat</h3>
+              </div>
+            </div>
+            <div id="monthlyOverview" class="month-grid"></div>
+          </div>
+
+          <div class="seasonality-card">
+            <div class="seasonality-card-head compact-head">
+              <div>
+                <span class="mini-label">Weekly</span>
+                <h3>Durchschnitt pro Wochentag</h3>
+              </div>
+            </div>
+            <div id="weekdayOverview" class="weekday-grid"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="telegramApp" class="screen tool-screen">
+      <button class="back-btn" onclick="goHome()">← Home</button>
+      <section class="panel">
+        <div class="panel-header">
+          <p class="eyebrow">Automation</p>
+          <h2>Telegram Alerts</h2>
+          <p>Speichere Bot API Token und Chat-ID nur lokal auf diesem Gerät. Danach kannst du Alert-Texte kopieren oder direkt an deinen Telegram-Chat senden.</p>
+        </div>
+
+        <div class="telegram-settings">
+          <div class="form-grid three-cols">
+            <label>Bot API Token
+              <div class="secret-field">
+                <input id="telegramBotToken" type="password" placeholder="123456:ABC..." autocomplete="off" />
+                <button class="eye-btn" type="button" onclick="toggleSecretVisibility('telegramBotToken', this)">👁</button>
+              </div>
+            </label>
+            <label>Telegram Chat-ID
+              <div class="secret-field">
+                <input id="telegramChatId" type="password" placeholder="z.B. 123456789" autocomplete="off" />
+                <button class="eye-btn" type="button" onclick="toggleSecretVisibility('telegramChatId', this)">👁</button>
+              </div>
+            </label>
+            <label>Name / Gerät optional
+              <input id="telegramName" placeholder="z.B. Mein Handy" autocomplete="off" />
+            </label>
+          </div>
+          <div class="telegram-actions">
+            <button class="primary-btn compact" onclick="saveTelegramSettings()">Telegram Daten speichern</button>
+            <button class="ghost-btn" onclick="findTelegramChatId()">Chat-ID automatisch suchen</button>
+            <button class="ghost-btn danger-soft" onclick="clearTelegramSettings()">Gespeicherte Daten löschen</button>
+          </div>
+          <p id="telegramSettingsStatus" class="helper-text"></p>
+        </div>
+
+        <div class="form-grid">
+          <label>Pair / Asset
+            <input id="telegramPair" placeholder="EUR/USD, BTC, XAU" />
+          </label>
+          <label>Setup
+            <select id="telegramSetup">
+              <option>Breakout</option>
+              <option>Retest</option>
+              <option>Liquidity Sweep</option>
+              <option>Trend Continuation</option>
+              <option>Seasonality Watch</option>
+            </select>
+          </label>
+          <label>Richtung
+            <select id="telegramDirection">
+              <option>Long</option>
+              <option>Short</option>
+              <option>Watchlist</option>
+              <option>Neutral</option>
+            </select>
+          </label>
+        </div>
+        <div class="telegram-actions">
+          <button class="primary-btn" onclick="generateTelegramTemplate()">Alert-Text erstellen</button>
+          <button class="ghost-btn" onclick="copyTelegramTemplate()">Text kopieren</button>
+          <button class="ghost-btn" onclick="sendTelegramAlert()">An Telegram senden</button>
+        </div>
+        <div id="telegramOutput" class="result-card result-large"></div>
+
+        <div class="result-card result-large automation-note">
+          <strong>Automatische RSI Alerts</strong>
+          <span>Im ZIP ist zusätzlich ein GitHub-Actions-Workflow enthalten. Er prüft alle Seasonality-Assets automatisch auf RSI unter 30 oder über 70 im 4H- und 1D-Chart und sendet dir eine Telegram-Nachricht.</span>
+          <small>Die Bot-Daten für automatische Alerts gehören in GitHub Secrets, nicht sichtbar in den Website-Code.</small>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
