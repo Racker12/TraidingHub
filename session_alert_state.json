@@ -1,33 +1,35 @@
 {
   "asia": {
-    "checked_at_local": "2026-04-28T22:02:17.739966+02:00",
-    "checked_at_utc": "2026-04-28T20:02:17.740109+00:00",
+    "checked_at_local": "2026-04-28T23:16:34.787444+02:00",
+    "checked_at_utc": "2026-04-28T21:16:35.110434+00:00",
     "close": "11:00",
     "is_open": false,
     "open": "02:00"
   },
-  "last_checked_at_local": "2026-04-28T22:02:17.739966+02:00",
-  "last_current_sessions": [],
+  "last_checked_at_local": "2026-04-28T23:16:34.787444+02:00",
+  "last_current_sessions": [
+    "Sydney"
+  ],
   "london": {
-    "checked_at_local": "2026-04-28T22:02:17.739966+02:00",
-    "checked_at_utc": "2026-04-28T20:02:17.740123+00:00",
+    "checked_at_local": "2026-04-28T23:16:34.787444+02:00",
+    "checked_at_utc": "2026-04-28T21:16:35.110442+00:00",
     "close": "18:00",
     "is_open": false,
     "open": "09:00"
   },
   "manual_summary_sent": true,
   "new_york": {
-    "checked_at_local": "2026-04-28T22:02:17.739966+02:00",
-    "checked_at_utc": "2026-04-28T20:02:17.740136+00:00",
+    "checked_at_local": "2026-04-28T23:16:34.787444+02:00",
+    "checked_at_utc": "2026-04-28T21:16:35.110452+00:00",
     "close": "20:00",
     "is_open": false,
     "open": "13:30"
   },
   "sydney": {
-    "checked_at_local": "2026-04-28T22:02:17.739966+02:00",
-    "checked_at_utc": "2026-04-28T20:02:17.740087+00:00",
+    "checked_at_local": "2026-04-28T23:16:34.787444+02:00",
+    "checked_at_utc": "2026-04-28T21:16:35.110405+00:00",
     "close": "08:00",
-    "is_open": false,
+    "is_open": true,
     "open": "23:00"
   }
 }
