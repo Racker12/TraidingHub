@@ -1,12 +1,15 @@
-name: RSI and Session Telegram Alerts
+name: RSI, Session and Command Telegram Alerts
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   alerts:
@@ -25,6 +28,13 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Run Telegram command replies
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python scripts/telegram_commands.py
+
       - name: Run RSI alerts
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -36,14 +46,14 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          FORCE_SESSION_STATUS: ${{ github.event_name == 'workflow_dispatch' }}
+          FORCE_SESSION_STATUS: "true"
         run: |
           python scripts/session_alerts.py
 
-      - name: Commit updated alert states
+      - name: Commit updated alert and command states
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add rsi_alert_state.json session_alert_state.json
-          git commit -m "Update alert states" || echo "No changes to commit"
+          git add rsi_alert_state.json session_alert_state.json telegram_command_state.json
+          git commit -m "Update bot states" || echo "No changes to commit"
           git push
