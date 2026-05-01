@@ -565,14 +565,14 @@
   },
   "USDJPY:1D:LONG": {
     "active": false,
-    "last_score": 54,
-    "candle_time": "2026-04-29 00:00:00",
+    "last_score": 46,
+    "candle_time": "2026-04-30 00:00:00",
     "last_alert_at": null
   },
   "USDJPY:1D:SHORT": {
     "active": false,
-    "last_score": 28,
-    "candle_time": "2026-04-29 00:00:00",
+    "last_score": 29,
+    "candle_time": "2026-04-30 00:00:00",
     "last_alert_at": null
   },
   "VWCE:1H:LONG": {
