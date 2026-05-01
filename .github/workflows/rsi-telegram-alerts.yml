@@ -1,4 +1,4 @@
-name: Trading Score, Session and Command Telegram Alerts
+name: Trading Score, News Risk, Session and Command Telegram Alerts
 
 on:
   schedule:
@@ -32,13 +32,15 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: |
           python scripts/telegram_commands.py
 
-      - name: Run Trading Score alerts
+      - name: Run Trading Score alerts with News Risk
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           TRADING_SCORE_MIN: "70"
           TRADING_SCORE_STRONG: "80"
           TRADING_SCORE_RESET_BELOW: "60"
@@ -47,11 +49,12 @@ jobs:
         run: |
           python scripts/trading_score_alerts.py
 
-      - name: Run session alerts
+      - name: Run LSX and market session alerts
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          FORCE_SESSION_STATUS: "true"
+          SESSION_TIMEZONE: "Europe/Berlin"
+          SEND_INITIAL_SESSION_SUMMARY: "auto"
         run: |
           python scripts/session_alerts.py
 
