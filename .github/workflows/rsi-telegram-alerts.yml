@@ -1,4 +1,4 @@
-name: RSI, Session and Command Telegram Alerts
+name: Trading Score, Session and Command Telegram Alerts
 
 on:
   schedule:
@@ -35,12 +35,17 @@ jobs:
         run: |
           python scripts/telegram_commands.py
 
-      - name: Run RSI alerts
+      - name: Run Trading Score alerts
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TRADING_SCORE_MIN: "70"
+          TRADING_SCORE_STRONG: "80"
+          TRADING_SCORE_RESET_BELOW: "60"
+          TRADING_SCORE_COOLDOWN_HOURS: "6"
+          SEND_INITIAL_SCORE_ALERTS: "false"
         run: |
-          python scripts/rsi_alerts.py
+          python scripts/trading_score_alerts.py
 
       - name: Run session alerts
         env:
@@ -54,6 +59,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add rsi_alert_state.json session_alert_state.json telegram_command_state.json
+          git add rsi_alert_state.json session_alert_state.json telegram_command_state.json trading_score_state.json
           git commit -m "Update bot states" || echo "No changes to commit"
           git push
