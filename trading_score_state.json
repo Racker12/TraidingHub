@@ -73,14 +73,14 @@
   },
   "BTC:1H:LONG": {
     "active": false,
-    "last_score": 57,
-    "candle_time": "2026-05-01 21:00:00+00:00",
+    "last_score": 52,
+    "candle_time": "2026-05-01 22:00:00+00:00",
     "last_alert_at": null
   },
   "BTC:1H:SHORT": {
     "active": false,
-    "last_score": 33,
-    "candle_time": "2026-05-01 21:00:00+00:00",
+    "last_score": 45,
+    "candle_time": "2026-05-01 22:00:00+00:00",
     "last_alert_at": null
   },
   "BTC:4H:LONG": {
@@ -146,13 +146,13 @@
   "ETH:1H:LONG": {
     "active": false,
     "last_score": 48,
-    "candle_time": "2026-05-01 21:00:00+00:00",
+    "candle_time": "2026-05-01 22:00:00+00:00",
     "last_alert_at": null
   },
   "ETH:1H:SHORT": {
     "active": false,
     "last_score": 48,
-    "candle_time": "2026-05-01 21:00:00+00:00",
+    "candle_time": "2026-05-01 22:00:00+00:00",
     "last_alert_at": null
   },
   "ETH:4H:LONG": {
@@ -470,13 +470,13 @@
   "SOL:1H:LONG": {
     "active": false,
     "last_score": 41,
-    "candle_time": "2026-05-01 21:00:00+00:00",
+    "candle_time": "2026-05-01 22:00:00+00:00",
     "last_alert_at": null
   },
   "SOL:1H:SHORT": {
     "active": false,
-    "last_score": 65,
-    "candle_time": "2026-05-01 21:00:00+00:00",
+    "last_score": 60,
+    "candle_time": "2026-05-01 22:00:00+00:00",
     "last_alert_at": null
   },
   "SOL:4H:LONG": {
