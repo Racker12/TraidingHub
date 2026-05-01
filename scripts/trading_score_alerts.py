@@ -1,14 +1,15 @@
 import os
 import json
-import math
 import time
 import requests
 import numpy as np
 import pandas as pd
 import yfinance as yf
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, time as dt_time
 from zoneinfo import ZoneInfo
+
+from news_risk import get_news_risk
 
 STATE_FILE = Path("trading_score_state.json")
 DATA_DIR = Path("Data")
@@ -23,6 +24,7 @@ COOLDOWN_HOURS = int(os.getenv("TRADING_SCORE_COOLDOWN_HOURS", "6"))
 SEND_INITIAL_ALERTS = os.getenv("SEND_INITIAL_SCORE_ALERTS", "false").lower() == "true"
 
 TIMEZONE = ZoneInfo("Europe/Berlin")
+NEW_YORK_TZ = ZoneInfo("America/New_York")
 
 TIMEFRAMES = ["1H", "4H", "1D"]
 
@@ -48,23 +50,18 @@ ASSETS = [
     {"key": "XAU", "name": "Gold", "ticker": "GC=F", "group": "metals", "periods": [5, 10, 15, 25]},
 ]
 
-SESSIONS = [
-    {"name": "Sydney", "open": 23.0, "close": 8.0},
-    {"name": "Asia", "open": 2.0, "close": 11.0},
-    {"name": "London", "open": 9.0, "close": 18.0},
-    {"name": "New York", "open": 13.5, "close": 20.0},
-]
-
 SESSION_GROUPS = {
     "crypto": ["24/7"],
-    "forex_major": ["London", "New York"],
-    "usd_jpy": ["Asia", "New York"],
-    "metals": ["London", "New York"],
-    "us": ["New York"],
-    "us_index": ["New York"],
-    "europe": ["London"],
+    "forex_major": ["US", "Xetra"],
+    "usd_jpy": ["Asia", "US"],
+    "metals": ["US", "Xetra"],
+    "us": ["US"],
+    "us_index": ["US"],
+    "europe": ["LSX", "Xetra"],
     "asia": ["Asia"],
 }
+
+NEWS_CACHE = {}
 
 
 def load_state():
@@ -132,7 +129,7 @@ def download_data(ticker, timeframe):
             "High": "max",
             "Low": "min",
             "Close": "last",
-            "Volume": "sum"
+            "Volume": "sum",
         }).dropna()
 
     if timeframe == "4H":
@@ -141,11 +138,10 @@ def download_data(ticker, timeframe):
             "High": "max",
             "Low": "min",
             "Close": "last",
-            "Volume": "sum"
+            "Volume": "sum",
         }).dropna()
 
-    # Wichtig: letzte Kerze wird ignoriert, weil sie noch offen sein kann.
-    # Dadurch arbeitet der Bot nur mit geschlossenen Kerzen.
+    # Letzte Kerze entfernen, damit nur geschlossene Kerzen genutzt werden.
     if len(data) > 250:
         data = data.iloc[:-1]
 
@@ -185,7 +181,7 @@ def atr(df, length=14):
     tr = pd.concat([
         high - low,
         (high - prev_close).abs(),
-        (low - prev_close).abs()
+        (low - prev_close).abs(),
     ], axis=1).max(axis=1)
 
     return tr.ewm(alpha=1 / length, adjust=False).mean()
@@ -194,7 +190,6 @@ def atr(df, length=14):
 def adx_di(df, length=14):
     high = df["High"]
     low = df["Low"]
-    close = df["Close"]
 
     up_move = high.diff()
     down_move = -low.diff()
@@ -229,23 +224,29 @@ def stochastic_rsi(rsi_series, length=14):
     return k.fillna(50), d.fillna(50)
 
 
-def session_is_open(session, now):
-    current = now.hour + now.minute / 60
-    open_time = session["open"]
-    close_time = session["close"]
-
-    if open_time < close_time:
-        return open_time <= current < close_time
-
-    return current >= open_time or current < close_time
+def market_is_between(now, start_time, end_time, tz):
+    local_now = now.astimezone(tz)
+    start = datetime.combine(local_now.date(), start_time, tzinfo=tz)
+    end = datetime.combine(local_now.date(), end_time, tzinfo=tz)
+    return start <= local_now < end
 
 
-def get_open_sessions():
+def get_open_market_sessions():
     now = datetime.now(TIMEZONE)
     open_names = []
-    for session in SESSIONS:
-        if session_is_open(session, now):
-            open_names.append(session["name"])
+
+    if now.weekday() < 5:
+        if market_is_between(now, dt_time(7, 30), dt_time(23, 0), TIMEZONE):
+            open_names.append("LSX")
+        if market_is_between(now, dt_time(9, 0), dt_time(17, 30), TIMEZONE):
+            open_names.append("Xetra")
+        if market_is_between(now, dt_time(9, 30), dt_time(16, 0), NEW_YORK_TZ):
+            open_names.append("US")
+
+    # Für asiatische Assets als grober Filter.
+    if now.weekday() < 5 and 0 <= now.hour < 9:
+        open_names.append("Asia")
+
     return open_names
 
 
@@ -326,7 +327,6 @@ def calculate_score(df, asset):
     current_close = float(close.iloc[-1])
     previous_close = float(close.iloc[-2])
     current_open = float(df["Open"].iloc[-1])
-
     candle_time = str(df.index[-1])
 
     ema50 = ema(close, 50)
@@ -346,7 +346,6 @@ def calculate_score(df, asset):
     long_reasons = []
     short_reasons = []
 
-    # 1. EMA Trend: 20 Punkte
     points = 0
     if current_close > float(ema200.iloc[-1]):
         points += 8
@@ -367,7 +366,6 @@ def calculate_score(df, asset):
     short_score += points
     add_reason(short_reasons, points, "EMA-Trend bearish")
 
-    # 2. RSI: 15 Punkte
     points = 0
     if previous_rsi < 30 <= current_rsi:
         points += 8
@@ -394,7 +392,6 @@ def calculate_score(df, asset):
     short_score += points
     add_reason(short_reasons, points, f"RSI Short-Struktur ({current_rsi:.1f})")
 
-    # 3. MACD: 10 Punkte
     points = 0
     if float(macd_line.iloc[-1]) > float(macd_signal.iloc[-1]):
         points += 5
@@ -411,7 +408,6 @@ def calculate_score(df, asset):
     short_score += points
     add_reason(short_reasons, points, "MACD bearish")
 
-    # 4. ADX / DI: 10 Punkte
     current_adx = float(adx_value.iloc[-1])
     current_plus_di = float(plus_di.iloc[-1])
     current_minus_di = float(minus_di.iloc[-1])
@@ -438,7 +434,6 @@ def calculate_score(df, asset):
     short_score += points
     add_reason(short_reasons, points, f"ADX/DI bearish (ADX {current_adx:.1f})")
 
-    # 5. Bollinger Bands: 8 Punkte
     points = 0
     if previous_close < float(bb_lower.iloc[-2]) and current_close > float(bb_lower.iloc[-1]):
         points += 6
@@ -461,7 +456,6 @@ def calculate_score(df, asset):
     short_score += points
     add_reason(short_reasons, points, "Bollinger Short-Reaktion")
 
-    # 6. Stoch RSI: 7 Punkte
     k_now = float(stoch_k.iloc[-1])
     d_now = float(stoch_d.iloc[-1])
     k_prev = float(stoch_k.iloc[-2])
@@ -483,7 +477,6 @@ def calculate_score(df, asset):
     short_score += points
     add_reason(short_reasons, points, f"Stoch RSI Short ({k_now:.1f})")
 
-    # 7. Support / Resistance: 10 Punkte
     recent_lows = low.iloc[-60:-1]
     recent_highs = high.iloc[-60:-1]
 
@@ -509,15 +502,13 @@ def calculate_score(df, asset):
     short_score += points
     add_reason(short_reasons, points, f"nahe Resistance ({distance_resistance:.2f}%)")
 
-    # 8. Seasonality: 8 Punkte
     season_long, season_short, season_reason = seasonality_score(asset["key"], asset["periods"])
     long_score += season_long
     short_score += season_short
     add_reason(long_reasons, season_long, f"Seasonality positiv: {season_reason}")
     add_reason(short_reasons, season_short, f"Seasonality negativ: {season_reason}")
 
-    # 9. Session: 5 Punkte
-    open_sessions = get_open_sessions()
+    open_sessions = get_open_market_sessions()
     wanted_sessions = SESSION_GROUPS.get(asset["group"], [])
 
     session_points = 0
@@ -528,10 +519,9 @@ def calculate_score(df, asset):
 
     long_score += session_points
     short_score += session_points
-    add_reason(long_reasons, session_points, f"passende Session offen: {', '.join(open_sessions) or 'keine'}")
-    add_reason(short_reasons, session_points, f"passende Session offen: {', '.join(open_sessions) or 'keine'}")
+    add_reason(long_reasons, session_points, f"passende Börsenzeit offen: {', '.join(open_sessions) or 'keine'}")
+    add_reason(short_reasons, session_points, f"passende Börsenzeit offen: {', '.join(open_sessions) or 'keine'}")
 
-    # 10. ATR / Volatilität: 5 Punkte
     current_atr = float(atr_values.iloc[-1])
     atr_percent = current_atr / current_close * 100 if current_close else 0
 
@@ -546,7 +536,6 @@ def calculate_score(df, asset):
     add_reason(long_reasons, points, f"ATR gesund ({atr_percent:.2f}%)")
     add_reason(short_reasons, points, f"ATR gesund ({atr_percent:.2f}%)")
 
-    # 11. Volumen / Candle: 2 Punkte
     avg_volume = float(volume.iloc[-30:].mean()) if len(volume) >= 30 else 0
     current_volume = float(volume.iloc[-1])
 
@@ -625,18 +614,48 @@ def mark_alert_sent(state, state_key, score, candle_time):
     }
 
 
+def get_cached_news_risk(asset):
+    key = asset["key"]
+    if key not in NEWS_CACHE:
+        try:
+            NEWS_CACHE[key] = get_news_risk(asset)
+        except Exception as exc:
+            NEWS_CACHE[key] = {
+                "level": "Unbekannt",
+                "score": 0,
+                "reasons": [f"News-Risiko konnte nicht geprüft werden: {exc}"],
+            }
+    return NEWS_CACHE[key]
+
+
 def build_message(asset, timeframe, bias, score, result):
     strength = "🔥 STRONG" if score >= STRONG_SCORE else "🚨 ALERT"
     reasons = result["long_reasons"] if bias == "LONG" else result["short_reasons"]
 
+    news = get_cached_news_risk(asset)
+    news_level = news.get("level", "Unbekannt")
+    news_reasons = news.get("reasons", [])
+
+    if news_level == "Hoch":
+        news_icon = "🔴"
+    elif news_level == "Mittel":
+        news_icon = "🟠"
+    elif news_level == "Niedrig":
+        news_icon = "🟢"
+    else:
+        news_icon = "⚪"
+
     reason_lines = "\n".join([f"✅ {r}" for r in reasons[:8]])
+    news_lines = "\n".join([f"⚠️ {r}" for r in news_reasons[:5]]) or "Keine stark relevanten News erkannt."
 
     return f"""<b>{strength} Trading Score</b>
 
 <b>Asset:</b> {asset["name"]} ({asset["key"]})
 <b>Timeframe:</b> {timeframe}
 <b>Bias:</b> {bias}
-<b>Score:</b> {score}/100
+<b>Trading Score:</b> {score}/100
+
+<b>News-Risiko:</b> {news_icon} <b>{news_level}</b>
 
 <b>Kurs:</b> {result["close"]:.4f}
 <b>RSI:</b> {result["rsi"]:.1f}
@@ -646,10 +665,14 @@ def build_message(asset, timeframe, bias, score, result):
 <b>Kerze:</b> geschlossen
 <b>Candle:</b> {result["candle_time"]}
 
-<b>Gründe:</b>
+<b>Technische Gründe:</b>
 {reason_lines}
 
-Hinweis: Kein automatischer Kauf/Verkauf. Setup mit Entry, SL und Risiko prüfen."""
+<b>News-Grund:</b>
+{news_lines}
+
+<b>Bot-Hinweis:</b>
+Setup technisch stark, aber News-Risiko beachten. Kein automatischer Kauf/Verkauf."""
 
 
 def main():
