@@ -6,6 +6,12 @@ from zoneinfo import ZoneInfo
 
 import requests
 
+try:
+    from news_risk import get_upcoming_important_events
+except Exception:
+    get_upcoming_important_events = None
+
+
 STATE_FILE = Path("session_alert_state.json")
 
 LOCAL_TIMEZONE = os.getenv("SESSION_TIMEZONE", "Europe/Berlin")
@@ -68,10 +74,6 @@ def is_weekend(day: date) -> bool:
 
 
 def easter_sunday(year: int) -> date:
-    """
-    Gregorian Easter calculation.
-    Returns Easter Sunday for given year.
-    """
     a = year % 19
     b = year // 100
     c = year % 100
@@ -90,10 +92,6 @@ def easter_sunday(year: int) -> date:
 
 
 def nth_weekday(year: int, month: int, weekday: int, n: int) -> date:
-    """
-    weekday: Monday=0 ... Sunday=6
-    n: 1 = first, 2 = second, etc.
-    """
     first = date(year, month, 1)
     days_until = (weekday - first.weekday()) % 7
     return first + timedelta(days=days_until + (n - 1) * 7)
@@ -110,11 +108,6 @@ def last_weekday(year: int, month: int, weekday: int) -> date:
 
 
 def observed_fixed_holiday(year: int, month: int, day: int) -> date:
-    """
-    US-style observed holiday.
-    If holiday falls Saturday -> Friday before.
-    If holiday falls Sunday -> Monday after.
-    """
     actual = date(year, month, day)
     if actual.weekday() == 5:
         return actual - timedelta(days=1)
@@ -128,50 +121,30 @@ def observed_fixed_holiday(year: int, month: int, day: int) -> date:
 # ============================================================
 
 def lsx_closed_dates(year: int) -> set[date]:
-    """
-    LSX / Lang & Schwarz relevant non-trading days.
-    Dynamic core:
-    - New Year
-    - Good Friday
-    - Easter weekend/Monday
-    - Labour Day
-    - Christmas Eve
-    - Christmas
-    - 2nd Christmas Day
-    - New Year's Eve
-
-    2026 also includes official/specific dates from Lang & Schwarz calendar.
-    """
     easter = easter_sunday(year)
 
-    closed = {
+    return {
         date(year, 1, 1),
-        easter - timedelta(days=2),  # Good Friday
-        easter - timedelta(days=1),  # Easter Saturday
-        easter,                      # Easter Sunday
-        easter + timedelta(days=1),  # Easter Monday
-        date(year, 5, 1),
+        easter - timedelta(days=2),  # Karfreitag
+        easter - timedelta(days=1),  # Ostersamstag
+        easter,                      # Ostersonntag
+        easter + timedelta(days=1),  # Ostermontag
+        date(year, 5, 1),            # Tag der Arbeit
         date(year, 12, 24),
         date(year, 12, 25),
         date(year, 12, 26),
         date(year, 12, 31),
     }
 
-    return closed
-
 
 def xetra_closed_dates(year: int) -> set[date]:
-    """
-    Xetra / Deutsche Börse non-trading days.
-    Core dates based on Deutsche Börse calendar pattern.
-    """
     easter = easter_sunday(year)
 
     return {
         date(year, 1, 1),
-        easter - timedelta(days=2),  # Good Friday
-        easter + timedelta(days=1),  # Easter Monday
-        date(year, 5, 1),
+        easter - timedelta(days=2),  # Karfreitag
+        easter + timedelta(days=1),  # Ostermontag
+        date(year, 5, 1),            # Tag der Arbeit
         date(year, 12, 24),
         date(year, 12, 25),
         date(year, 12, 31),
@@ -179,13 +152,9 @@ def xetra_closed_dates(year: int) -> set[date]:
 
 
 def us_market_closed_dates(year: int) -> set[date]:
-    """
-    NYSE/Nasdaq-style US market holidays.
-    Includes common full-day closures.
-    """
     easter = easter_sunday(year)
 
-    holidays = {
+    return {
         observed_fixed_holiday(year, 1, 1),       # New Year's Day
         nth_weekday(year, 1, 0, 3),               # Martin Luther King Jr. Day
         nth_weekday(year, 2, 0, 3),               # Presidents' Day
@@ -198,49 +167,36 @@ def us_market_closed_dates(year: int) -> set[date]:
         observed_fixed_holiday(year, 12, 25),     # Christmas
     }
 
-    return holidays
-
 
 def us_market_early_close_dates(year: int) -> set[date]:
-    """
-    Typical NYSE early close days.
-    Close usually 13:00 New York time.
-    """
     thanksgiving = nth_weekday(year, 11, 3, 4)
 
     early = {
         thanksgiving + timedelta(days=1),  # Day after Thanksgiving
-        date(year, 12, 24),                # Christmas Eve, if weekday and not full holiday
+        date(year, 12, 24),                # Christmas Eve
     }
 
-    # If July 4 is Saturday/Sunday/observed differently, the adjacent weekday
-    # can be early close. For 2026 this is July 3.
     july4 = date(year, 7, 4)
-    if july4.weekday() == 5:  # Saturday
+    if july4.weekday() == 5:
         early.add(date(year, 7, 3))
-    elif july4.weekday() == 6:  # Sunday
+    elif july4.weekday() == 6:
         early.add(date(year, 7, 2))
     else:
         early.add(date(year, 7, 3))
 
-    return {d for d in early if d.weekday() < 5 and d not in us_market_closed_dates(year)}
+    return {
+        d for d in early
+        if d.weekday() < 5 and d not in us_market_closed_dates(year)
+    }
 
 
 def lsx_early_close_time(day: date) -> time | None:
-    """
-    Known LSX special early close.
-    Lang & Schwarz lists 30.12.2026 trading until 14:00.
-    """
     if day == date(2026, 12, 30):
         return time(14, 0)
     return None
 
 
 def us_close_time_ny(day: date) -> time:
-    """
-    Regular NYSE close 16:00 ET.
-    Early close usually 13:00 ET.
-    """
     if day in us_market_early_close_dates(day.year):
         return time(13, 0)
     return time(16, 0)
@@ -266,31 +222,9 @@ def berlin_dt_for_local_time(day: date, local_time: time) -> datetime:
     return datetime.combine(day, local_time, tzinfo=BERLIN_TZ)
 
 
-def berlin_dt_for_ny_time(day_berlin: date, ny_time: time) -> datetime:
-    """
-    Uses the same calendar day from New York perspective when possible.
-    This automatically handles DST differences between Europe and US.
-    """
-    ny_day = datetime.now(NEW_YORK_TZ).date()
-
-    # For scheduled daily checks, Berlin date and NY date can differ around midnight.
-    # For US open/close events, we calculate against the current New York date
-    # because the US market calendar belongs to New York.
-    ny_dt = datetime.combine(ny_day, ny_time, tzinfo=NEW_YORK_TZ)
-    return ny_dt.astimezone(BERLIN_TZ)
-
-
-def event_status(event_dt: datetime, now: datetime, window_minutes: int = 7) -> bool:
-    """
-    Returns True if now is at/after event time and within a practical send window.
-    Since GitHub Actions may run a few minutes late, we allow a window.
-    """
+def event_status(event_dt: datetime, now: datetime, window_minutes: int = 12) -> bool:
     delta = now - event_dt
     return timedelta(minutes=0) <= delta <= timedelta(minutes=window_minutes)
-
-
-def has_event_passed_today(event_dt: datetime, now: datetime) -> bool:
-    return now >= event_dt
 
 
 def format_dt(dt: datetime) -> str:
@@ -316,7 +250,6 @@ def build_market_events(now: datetime) -> list[dict]:
             "title": "LSX / Trade Republic öffnet",
             "emoji": "🟢",
             "dt": lsx_open,
-            "impact": "Vor Xetra-Open können Spreads größer sein. Für Aktien/ETFs beginnt der lange LSX-Handel.",
             "message": (
                 "🟢 <b>LSX / Trade Republic öffnet</b>\n"
                 f"Zeit: <b>{format_dt(lsx_open)}</b> ({LOCAL_TIMEZONE})\n"
@@ -331,7 +264,6 @@ def build_market_events(now: datetime) -> list[dict]:
             "title": "LSX / Trade Republic schließt",
             "emoji": "🔴",
             "dt": lsx_close,
-            "impact": "LSX-Handel endet. Außerhalb der Handelszeit werden normalerweise keine regulären Kurse gestellt.",
             "message": (
                 "🔴 <b>LSX / Trade Republic schließt</b>\n"
                 f"Zeit: <b>{format_dt(lsx_close)}</b> ({LOCAL_TIMEZONE})\n\n"
@@ -339,7 +271,7 @@ def build_market_events(now: datetime) -> list[dict]:
             ),
         })
 
-    # Xetra / Europe
+    # Xetra / Europa
     if is_xetra_open_day(today_berlin):
         xetra_open = berlin_dt_for_local_time(today_berlin, time(9, 0))
         xetra_close = berlin_dt_for_local_time(today_berlin, time(17, 30))
@@ -350,7 +282,6 @@ def build_market_events(now: datetime) -> list[dict]:
             "title": "Xetra / Europa öffnet",
             "emoji": "🇪🇺",
             "dt": xetra_open,
-            "impact": "Mehr Liquidität bei deutschen/europäischen Aktien und ETFs. Für LSX oft wichtig wegen fairerer Referenzpreise.",
             "message": (
                 "🇪🇺 <b>Xetra / Europa öffnet</b>\n"
                 f"Zeit: <b>{format_dt(xetra_open)}</b> ({LOCAL_TIMEZONE})\n"
@@ -365,7 +296,6 @@ def build_market_events(now: datetime) -> list[dict]:
             "title": "Xetra / Europa schließt",
             "emoji": "🔴",
             "dt": xetra_close,
-            "impact": "Nach Xetra-Close können Spreads auf LSX breiter werden.",
             "message": (
                 "🔴 <b>Xetra / Europa schließt</b>\n"
                 f"Zeit: <b>{format_dt(xetra_close)}</b> ({LOCAL_TIMEZONE})\n\n"
@@ -373,7 +303,7 @@ def build_market_events(now: datetime) -> list[dict]:
             ),
         })
 
-    # US market
+    # US-Börse
     if is_us_open_day(today_ny):
         us_open_ny = datetime.combine(today_ny, time(9, 30), tzinfo=NEW_YORK_TZ)
         us_close_ny = datetime.combine(today_ny, us_close_time_ny(today_ny), tzinfo=NEW_YORK_TZ)
@@ -389,12 +319,12 @@ def build_market_events(now: datetime) -> list[dict]:
             "title": "US-Börse öffnet",
             "emoji": "🇺🇸",
             "dt": us_open_berlin,
-            "impact": "Oft starke Bewegung bei US-Aktien, Nasdaq, S&P 500, Tesla, Nvidia, Amazon, Microsoft und auch US-lastigen ETFs.",
             "message": (
                 "🇺🇸 <b>US-Börse öffnet</b>\n"
                 f"Zeit Deutschland: <b>{format_dt(us_open_berlin)}</b> ({LOCAL_TIMEZONE})\n"
                 "US-Zeit: <b>09:30 New York</b>\n\n"
-                "Ab jetzt kommen oft größere Schwankungen bei US-Aktien, Nasdaq, S&P 500 und US-lastigen ETFs."
+                "Ab jetzt kommen oft größere Schwankungen bei US-Aktien, Nasdaq, S&P 500, "
+                "Tesla, Nvidia, Amazon, Microsoft und US-lastigen ETFs."
             ),
         })
 
@@ -406,7 +336,6 @@ def build_market_events(now: datetime) -> list[dict]:
             "title": "US-Börse schließt",
             "emoji": "🔴",
             "dt": us_close_berlin,
-            "impact": "US-Regular-Session endet. Danach kann LSX zwar noch handeln, aber Bewegungen/Spreads können anders werden.",
             "message": (
                 "🔴 <b>US-Börse schließt</b>\n"
                 f"Zeit Deutschland: <b>{format_dt(us_close_berlin)}</b> ({LOCAL_TIMEZONE})\n"
@@ -424,8 +353,7 @@ def build_market_events(now: datetime) -> list[dict]:
 
 def current_market_status(now: datetime) -> list[str]:
     today_berlin = now.date()
-    now_ny = now.astimezone(NEW_YORK_TZ)
-    today_ny = now_ny.date()
+    today_ny = now.astimezone(NEW_YORK_TZ).date()
 
     lines = []
 
@@ -433,6 +361,7 @@ def current_market_status(now: datetime) -> list[str]:
     if is_lsx_open_day(today_berlin):
         lsx_open = berlin_dt_for_local_time(today_berlin, time(7, 30))
         lsx_close = berlin_dt_for_local_time(today_berlin, lsx_early_close_time(today_berlin) or time(23, 0))
+
         if lsx_open <= now < lsx_close:
             lines.append(f"🟢 <b>LSX / Trade Republic</b>: offen bis {format_dt(lsx_close)}")
         elif now < lsx_open:
@@ -446,6 +375,7 @@ def current_market_status(now: datetime) -> list[str]:
     if is_xetra_open_day(today_berlin):
         xetra_open = berlin_dt_for_local_time(today_berlin, time(9, 0))
         xetra_close = berlin_dt_for_local_time(today_berlin, time(17, 30))
+
         if xetra_open <= now < xetra_close:
             lines.append(f"🟢 <b>Xetra / Europa</b>: offen bis {format_dt(xetra_close)}")
         elif now < xetra_open:
@@ -482,16 +412,59 @@ def next_event_text(now: datetime, events: list[dict]) -> str:
     return "Heute keine weiteren wichtigen Börsen-Events."
 
 
+def upcoming_macro_text() -> tuple[str, str, str]:
+    if not get_upcoming_important_events:
+        return (
+            "⚪",
+            "Unbekannt",
+            "Makro-News konnten nicht geladen werden, weil news_risk.py nicht verfügbar ist.",
+        )
+
+    try:
+        macro = get_upcoming_important_events(days_ahead=2)
+        macro_level = macro.get("level", "Unbekannt")
+        macro_events = macro.get("events", [])
+
+        if macro_level == "Hoch":
+            macro_icon = "🔴"
+        elif macro_level == "Mittel":
+            macro_icon = "🟠"
+        elif macro_level == "Niedrig":
+            macro_icon = "🟢"
+        else:
+            macro_icon = "⚪"
+
+        if macro_events:
+            macro_text = "\n".join([f"• {event}" for event in macro_events[:8]])
+        else:
+            macro_text = "Keine wichtigen Makro-Events in den nächsten Tagen erkannt."
+
+        return macro_icon, macro_level, macro_text
+
+    except Exception as exc:
+        return (
+            "⚪",
+            "Unbekannt",
+            f"Makro-News konnten nicht geladen werden: {exc}",
+        )
+
+
 def summary_message(now: datetime) -> str:
     events = build_market_events(now)
     status = "\n".join(current_market_status(now))
+    macro_icon, macro_level, macro_text = upcoming_macro_text()
 
     return (
         "🕒 <b>Aktueller Börsenstatus für LSX / Trade Republic</b>\n"
         f"Zeit: <b>{now.strftime('%Y-%m-%d %H:%M')}</b> ({LOCAL_TIMEZONE})\n\n"
         f"{status}\n\n"
-        f"<b>Nächstes wichtiges Event:</b>\n{next_event_text(now, events)}\n\n"
-        "Berücksichtigt werden Wochenende, LSX/Xetra-Feiertage, US-Feiertage und US-Sommerzeit."
+        f"<b>Nächstes wichtiges Börsen-Event:</b>\n"
+        f"{next_event_text(now, events)}\n\n"
+        f"<b>Kommende wichtige News / Makro-Events:</b>\n"
+        f"News-Risiko: {macro_icon} <b>{macro_level}</b>\n"
+        f"{macro_text}\n\n"
+        "Berücksichtigt werden Wochenende, LSX/Xetra-Feiertage, US-Feiertage, "
+        "US-Sommerzeit und wichtige Makro-News."
     )
 
 
@@ -505,6 +478,7 @@ def event_state_key(event: dict) -> str:
 
 def should_send_event(state: dict, event: dict, now: datetime) -> bool:
     key = event_state_key(event)
+
     if state.get("events_sent", {}).get(key):
         return False
 
@@ -522,6 +496,7 @@ def mark_event_sent(state: dict, event: dict, now: datetime) -> None:
 
 def cleanup_old_events(state: dict, now: datetime, keep_days: int = 14) -> None:
     events_sent = state.get("events_sent", {})
+
     if not isinstance(events_sent, dict):
         state["events_sent"] = {}
         return
@@ -548,7 +523,6 @@ def should_send_initial_summary(state: dict) -> bool:
     if SEND_INITIAL_SESSION_SUMMARY == "false":
         return False
 
-    # auto: Beim manuellen Run Status senden, damit du testen kannst.
     run_id = os.getenv("GITHUB_RUN_ID", "")
     last_manual_run_id = state.get("last_manual_summary_run_id")
 
