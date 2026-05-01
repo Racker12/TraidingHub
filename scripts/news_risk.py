@@ -18,6 +18,8 @@ HIGH_IMPACT_KEYWORDS = [
     "ecb", "lagarde",
     "gdp", "retail sales",
     "war", "attack", "sanction", "crisis",
+    "ism", "pmi", "jobless claims",
+    "jolts", "consumer confidence",
 ]
 
 MEDIUM_IMPACT_KEYWORDS = [
@@ -26,6 +28,7 @@ MEDIUM_IMPACT_KEYWORDS = [
     "sec", "lawsuit", "investigation",
     "downgrade", "upgrade", "price target",
     "oil", "dollar", "yields", "treasury",
+    "speech", "minutes", "auction",
 ]
 
 ASSET_KEYWORDS = {
@@ -49,24 +52,27 @@ ASSET_KEYWORDS = {
     "MSF": ["microsoft", "msft", "azure"],
     "BYD": ["byd", "electric vehicle", "ev"],
     "RheinmetallAG": ["rheinmetall", "defense", "defence", "rüstung"],
-    "VWCE": ["vanguard", "ftse all-world", "world etf"],
+    "VWCE": ["vanguard", "ftse all-world", "world etf", "etf"],
     "ABEA": ["aex", "netherlands", "europe stocks"],
 }
 
 
 def _request_json(path, params=None, timeout=20):
     if not FINNHUB_API_KEY:
-        return None
+        return {"_error": "missing_api_key"}
 
     params = params or {}
     params["token"] = FINNHUB_API_KEY
 
     try:
         response = requests.get(f"{BASE_URL}{path}", params=params, timeout=timeout)
+
         if response.status_code == 429:
             return {"_error": "rate_limit"}
+
         response.raise_for_status()
         return response.json()
+
     except Exception as exc:
         return {"_error": str(exc)}
 
@@ -81,10 +87,48 @@ def _clean_title(title):
     return title[:160]
 
 
+def _event_datetime_text(event):
+    event_time = str(event.get("time", "") or "").strip()
+    event_date = str(event.get("date", "") or "").strip()
+
+    if event_time and event_date:
+        return f"{event_date} {event_time}"
+
+    if event_time:
+        return event_time
+
+    if event_date:
+        return event_date
+
+    return ""
+
+
+def _impact_level_from_event(event):
+    title = " ".join([
+        str(event.get("event", "")),
+        str(event.get("country", "")),
+        str(event.get("impact", "")),
+    ]).strip()
+
+    text = title.lower()
+    impact = str(event.get("impact", "") or "").lower()
+
+    is_high = "high" in impact or _text_contains_any(text, HIGH_IMPACT_KEYWORDS)
+    is_medium = "medium" in impact or _text_contains_any(text, MEDIUM_IMPACT_KEYWORDS)
+
+    if is_high:
+        return "Hoch"
+
+    if is_medium:
+        return "Mittel"
+
+    return "Niedrig"
+
+
 def get_economic_calendar_risk():
     """
     Prüft wichtige Makroevents heute und morgen.
-    Finnhub Economic Calendar kann je nach Plan/Limit unterschiedlich viele Details liefern.
+    Wird im Trading-Score verwendet.
     """
     now = datetime.now(TIMEZONE)
     start = now.date().isoformat()
@@ -92,37 +136,33 @@ def get_economic_calendar_risk():
 
     data = _request_json("/calendar/economic", {"from": start, "to": end})
 
-    reasons = []
-    score = 0
-
     if not data or isinstance(data, dict) and data.get("_error"):
+        error = data.get("_error") if isinstance(data, dict) else "unknown"
         return {
             "score": 0,
             "level": "Unbekannt",
-            "reasons": ["Finnhub Economic Calendar konnte nicht geladen werden."],
+            "reasons": [f"Finnhub Economic Calendar konnte nicht geladen werden: {error}"],
         }
 
     events = data.get("economicCalendar", []) if isinstance(data, dict) else []
 
+    reasons = []
+    score = 0
+
     for event in events:
-        title = " ".join([
-            str(event.get("event", "")),
-            str(event.get("country", "")),
-            str(event.get("impact", "")),
-        ]).strip()
+        event_name = str(event.get("event", "") or "").strip()
+        country = str(event.get("country", "") or "").strip()
+        impact = str(event.get("impact", "") or "").strip()
 
-        impact = str(event.get("impact", "")).lower()
-        title_lower = title.lower()
+        combined = " ".join([event_name, country, impact]).strip()
+        level = _impact_level_from_event(event)
 
-        is_high_keyword = _text_contains_any(title_lower, HIGH_IMPACT_KEYWORDS)
-        is_medium_keyword = _text_contains_any(title_lower, MEDIUM_IMPACT_KEYWORDS)
-
-        if "high" in impact or is_high_keyword:
+        if level == "Hoch":
             score += 3
-            reasons.append(f"Heute/kurzfristig wichtiges Makroevent: {_clean_title(title)}")
-        elif "medium" in impact or is_medium_keyword:
+            reasons.append(f"Heute/kurzfristig wichtiges Makroevent: {_clean_title(combined)}")
+        elif level == "Mittel":
             score += 1
-            reasons.append(f"Makroevent im Blick behalten: {_clean_title(title)}")
+            reasons.append(f"Makroevent im Blick behalten: {_clean_title(combined)}")
 
     return {
         "score": min(score, 6),
@@ -134,12 +174,12 @@ def get_economic_calendar_risk():
 def get_company_news_risk(asset):
     """
     Prüft Company News bei US-Aktien.
-    Für Nicht-US/Forex/Commodities nutzt der Bot eher Market News + Makro.
-    Finnhub Company News ist vor allem für nordamerikanische Unternehmen gedacht.
+    Für Forex, Krypto, Futures und europäische Ticker wird dieser Block übersprungen.
     """
     ticker = asset.get("ticker", "")
     key = asset.get("key", "")
 
+    # Kein Company-News-Call für Forex, Futures, Crypto-Paare oder europäische/asiatische Ticker.
     if ticker.endswith("=X") or ticker.endswith("=F") or "-" in ticker or "." in ticker:
         return {"score": 0, "level": "Niedrig", "reasons": []}
 
@@ -155,7 +195,7 @@ def get_company_news_risk(asset):
     reasons = []
     score = 0
 
-    for item in data[:10]:
+    for item in data[:12]:
         headline = item.get("headline", "")
         summary = item.get("summary", "")
         text = f"{headline} {summary}".lower()
@@ -166,6 +206,9 @@ def get_company_news_risk(asset):
         elif _text_contains_any(text, MEDIUM_IMPACT_KEYWORDS):
             score += 1
             reasons.append(f"Asset-News: {_clean_title(headline)}")
+        elif key in ASSET_KEYWORDS and _text_contains_any(text, ASSET_KEYWORDS[key]):
+            score += 1
+            reasons.append(f"Neue Asset-News: {_clean_title(headline)}")
 
     return {
         "score": min(score, 5),
@@ -177,17 +220,18 @@ def get_company_news_risk(asset):
 def get_market_news_risk(asset):
     """
     Prüft allgemeine Market News und sucht nach Keywords passend zum Asset.
-    Finnhub Market News liefert allgemeine News-Kategorien.
     """
     key = asset.get("key", "")
+    group = asset.get("group", "")
     keywords = ASSET_KEYWORDS.get(key, [key.lower(), asset.get("name", "").lower()])
 
     categories = ["general"]
-    if asset.get("group") == "crypto" or key in ["BTC", "ETH", "SOL"]:
+
+    if group == "crypto" or key in ["BTC", "ETH", "SOL"]:
         categories = ["crypto", "general"]
     elif key in ["XAU", "SI", "PL"]:
         categories = ["forex", "general"]
-    elif asset.get("group") in ["forex_major", "usd_jpy"]:
+    elif group in ["forex_major", "usd_jpy"]:
         categories = ["forex", "general"]
 
     reasons = []
@@ -199,7 +243,7 @@ def get_market_news_risk(asset):
         if not data or isinstance(data, dict) and data.get("_error"):
             continue
 
-        for item in data[:20]:
+        for item in data[:25]:
             headline = item.get("headline", "")
             summary = item.get("summary", "")
             text = f"{headline} {summary}".lower()
@@ -214,20 +258,29 @@ def get_market_news_risk(asset):
             elif asset_related and medium_related:
                 score += 1
                 reasons.append(f"Relevante News: {_clean_title(headline)}")
-            elif high_related and key in ["BTC", "ETH", "SOL", "XAU", "SI", "PL", "EURUSD", "GBPUSD", "USDJPY", "NASDAQ"]:
+            elif high_related and key in [
+                "BTC", "ETH", "SOL", "XAU", "SI", "PL",
+                "EURUSD", "GBPUSD", "USDJPY", "NASDAQ"
+            ]:
                 score += 1
                 reasons.append(f"Makro/Markt-News relevant: {_clean_title(headline)}")
+
+    # Doppelte News entfernen, Reihenfolge behalten
+    unique_reasons = []
+    for reason in reasons:
+        if reason not in unique_reasons:
+            unique_reasons.append(reason)
 
     return {
         "score": min(score, 5),
         "level": "Hoch" if score >= 4 else "Mittel" if score >= 2 else "Niedrig",
-        "reasons": reasons[:5],
+        "reasons": unique_reasons[:5],
     }
 
 
 def get_news_risk(asset):
     """
-    Gibt ein einheitliches News-Risiko zurück:
+    Einheitliches News-Risiko für Trading-Score-Alerts:
     Niedrig / Mittel / Hoch / Unbekannt
     """
     if not FINNHUB_API_KEY:
@@ -263,4 +316,73 @@ def get_news_risk(asset):
         "level": level,
         "score": total,
         "reasons": reasons[:6],
+    }
+
+
+def get_upcoming_important_events(days_ahead=2):
+    """
+    Wird von session_alerts.py beim manuellen Workflow-Start genutzt.
+    Gibt kommende wichtige Makro-Events für die Börsenstatus-Nachricht zurück.
+    """
+    if not FINNHUB_API_KEY:
+        return {
+            "level": "Unbekannt",
+            "events": ["FINNHUB_API_KEY fehlt. Makro-News konnten nicht geprüft werden."],
+        }
+
+    now = datetime.now(TIMEZONE)
+    start = now.date().isoformat()
+    end = (now.date() + timedelta(days=days_ahead)).isoformat()
+
+    data = _request_json("/calendar/economic", {"from": start, "to": end})
+
+    if not data or isinstance(data, dict) and data.get("_error"):
+        error = data.get("_error") if isinstance(data, dict) else "unknown"
+        return {
+            "level": "Unbekannt",
+            "events": [f"Economic Calendar konnte nicht geladen werden: {error}"],
+        }
+
+    events = data.get("economicCalendar", []) if isinstance(data, dict) else []
+
+    important = []
+
+    for event in events:
+        event_name = str(event.get("event", "") or "").strip()
+        country = str(event.get("country", "") or "").strip()
+        impact = str(event.get("impact", "") or "").strip()
+
+        combined = " ".join([event_name, country, impact]).strip()
+        level = _impact_level_from_event(event)
+
+        if level not in ["Hoch", "Mittel"]:
+            continue
+
+        icon = "🔴" if level == "Hoch" else "🟠"
+        event_time = _event_datetime_text(event)
+        time_part = f"{event_time} - " if event_time else ""
+        country_part = f"{country} - " if country else ""
+        impact_part = f" ({impact})" if impact else ""
+
+        important.append(
+            f"{icon} {time_part}{country_part}{_clean_title(event_name)}{impact_part}"
+        )
+
+    if not important:
+        return {
+            "level": "Niedrig",
+            "events": ["Keine wichtigen Makro-Events in den nächsten Tagen erkannt."],
+        }
+
+    # Doppelte entfernen
+    unique_events = []
+    for item in important:
+        if item not in unique_events:
+            unique_events.append(item)
+
+    level = "Hoch" if any(item.startswith("🔴") for item in unique_events) else "Mittel"
+
+    return {
+        "level": level,
+        "events": unique_events[:8],
     }
