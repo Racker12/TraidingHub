@@ -45,6 +45,27 @@ MEDIUM_IMPACT_KEYWORDS = [
     "speech", "minutes", "auction",
 ]
 
+# Diese Begriffe sind so wichtig, dass selbst ein Finnhub-"Low" nicht komplett ignoriert wird.
+# Aber sie werden dann nur auf "Mittel" hochgestuft, nicht auf "Hoch".
+CRITICAL_LOW_UPGRADE_KEYWORDS = [
+    "cpi",
+    "consumer price index",
+    "fomc",
+    "fed rate decision",
+    "federal funds rate",
+    "interest rate decision",
+    "rate decision",
+    "nfp",
+    "nonfarm",
+    "non-farm",
+    "payrolls",
+    "pce",
+    "core pce",
+    "ecb rate decision",
+    "deposit facility rate",
+    "main refinancing rate",
+]
+
 ASSET_KEYWORDS = {
     "BTC": ["bitcoin", "btc", "crypto", "cryptocurrency"],
     "ETH": ["ethereum", "eth", "crypto", "cryptocurrency"],
@@ -116,22 +137,46 @@ def _clean_title(title):
 
 
 def _impact_level_from_event(event):
-    title = " ".join([
-        str(event.get("event", "")),
-        str(event.get("country", "")),
-        str(event.get("impact", "")),
-    ]).strip()
+    """
+    Einheitliche News-Bewertung:
 
-    text = title.lower()
+    - Finnhub High -> Hoch
+    - Finnhub Medium -> Mittel
+    - Finnhub Low -> normalerweise Niedrig / wird ausgefiltert
+    - Finnhub Low + extrem wichtige Begriffe -> Mittel
+    - Kein Impact-Feld + wichtige Begriffe -> Mittel/Hoch
+
+    Dadurch gibt es keine widersprüchliche Anzeige mehr wie:
+    🔴 Event (Low)
+    """
+    event_name = str(event.get("event", "") or "")
+    country = str(event.get("country", "") or "")
     impact = str(event.get("impact", "") or "").lower()
 
-    is_high = "high" in impact or _text_contains_any(text, HIGH_IMPACT_KEYWORDS)
-    is_medium = "medium" in impact or _text_contains_any(text, MEDIUM_IMPACT_KEYWORDS)
+    text = f"{event_name} {country} {impact}".lower()
 
-    if is_high:
+    has_critical_keyword = _text_contains_any(text, CRITICAL_LOW_UPGRADE_KEYWORDS)
+    has_high_keyword = _text_contains_any(text, HIGH_IMPACT_KEYWORDS)
+    has_medium_keyword = _text_contains_any(text, MEDIUM_IMPACT_KEYWORDS)
+
+    if "high" in impact:
         return "Hoch"
 
-    if is_medium:
+    if "medium" in impact:
+        return "Mittel"
+
+    if "low" in impact:
+        if has_critical_keyword:
+            return "Mittel"
+        return "Niedrig"
+
+    if has_critical_keyword:
+        return "Hoch"
+
+    if has_high_keyword:
+        return "Mittel"
+
+    if has_medium_keyword:
         return "Mittel"
 
     return "Niedrig"
@@ -142,7 +187,6 @@ def _parse_event_datetime_de(event):
     Finnhub Economic Calendar liefert meist date + time.
     Wir interpretieren diese Zeit als UTC und rechnen sie nach Europe/Berlin um.
 
-    Wichtig:
     Auch 00:00:00 wird als echte Zeit behandelt, weil Finnhub manchmal
     mehrere Events um 00:00, 00:01, 00:30 usw. liefert.
     """
@@ -466,6 +510,13 @@ def get_upcoming_important_events(days_ahead=2):
     Gibt nur Events zurück, die:
     - noch bevorstehen
     - oder maximal EVENT_PAST_WINDOW_MINUTES Minuten zurückliegen
+
+    Angezeigt werden nur:
+    - Hoch
+    - Mittel
+
+    Niedrig wird aussortiert, außer es enthält extrem wichtige Begriffe
+    und wird dadurch auf Mittel hochgestuft.
     """
     if not FINNHUB_API_KEY:
         return {
@@ -492,7 +543,6 @@ def get_upcoming_important_events(days_ahead=2):
 
         event_name = str(event.get("event", "") or "").strip()
         country = str(event.get("country", "") or "").strip()
-        impact = str(event.get("impact", "") or "").strip()
 
         level = _impact_level_from_event(event)
 
@@ -503,10 +553,9 @@ def get_upcoming_important_events(days_ahead=2):
         event_time = _event_datetime_text(event)
         time_part = f"{event_time} - " if event_time else ""
         country_part = f"{country} - " if country else ""
-        impact_part = f" ({impact})" if impact else ""
 
         important.append(
-            f"{icon} {time_part}{country_part}{_clean_title(event_name)}{impact_part}"
+            f"{icon} {time_part}{country_part}{_clean_title(event_name)} | Risiko: {level}"
         )
 
     if not important:
