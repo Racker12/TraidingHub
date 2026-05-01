@@ -9,11 +9,11 @@
   "current_status": [
     "⚪ <b>LSX / Trade Republic</b>: heute kein regulärer Handel",
     "⚪ <b>Xetra / Europa</b>: heute kein regulärer Handel",
-    "⚪ <b>US-Börse</b>: geschlossen, öffnet 15:30"
+    "🟢 <b>US-Börse</b>: offen bis 22:00"
   ],
   "events_sent": {},
-  "last_checked_at_local": "2026-05-01T14:48:53.774561+02:00",
-  "last_checked_at_utc": "2026-05-01T12:48:53.774806+00:00",
+  "last_checked_at_local": "2026-05-01T16:11:20.682535+02:00",
+  "last_checked_at_utc": "2026-05-01T14:11:20.682792+00:00",
   "last_current_sessions": [
     "London"
   ],
