@@ -7,12 +7,18 @@ from zoneinfo import ZoneInfo
 
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY", "").strip()
 BASE_URL = "https://finnhub.io/api/v1"
+
 TIMEZONE = ZoneInfo("Europe/Berlin")
+UTC_TZ = ZoneInfo("UTC")
 
 REQUEST_TIMEOUT = 45
 REQUEST_RETRIES = 3
 
-ECONOMIC_CACHE = None
+# Economic Events werden nur berücksichtigt, wenn sie noch kommen
+# oder maximal so viele Minuten zurückliegen.
+EVENT_PAST_WINDOW_MINUTES = int(os.getenv("NEWS_EVENT_PAST_WINDOW_MINUTES", "60"))
+
+ECONOMIC_CACHE = {}
 MARKET_NEWS_CACHE = {}
 COMPANY_NEWS_CACHE = {}
 
@@ -66,12 +72,6 @@ ASSET_KEYWORDS = {
 
 
 def _request_json(path, params=None, timeout=REQUEST_TIMEOUT):
-    """
-    Robuste Finnhub-Abfrage:
-    - längerer Timeout
-    - mehrere Versuche
-    - kleine Pause zwischen Versuchen
-    """
     if not FINNHUB_API_KEY:
         return {"_error": "missing_api_key"}
 
@@ -115,22 +115,6 @@ def _clean_title(title):
     return title[:160]
 
 
-def _event_datetime_text(event):
-    event_time = str(event.get("time", "") or "").strip()
-    event_date = str(event.get("date", "") or "").strip()
-
-    if event_time and event_date:
-        return f"{event_date} {event_time}"
-
-    if event_time:
-        return event_time
-
-    if event_date:
-        return event_date
-
-    return ""
-
-
 def _impact_level_from_event(event):
     title = " ".join([
         str(event.get("event", "")),
@@ -153,28 +137,116 @@ def _impact_level_from_event(event):
     return "Niedrig"
 
 
-def _get_economic_calendar_data(days_ahead=1):
+def _parse_event_datetime_de(event):
     """
-    Economic Calendar wird gecacht, damit er pro Bot-Lauf nur einmal geladen wird.
-    Das verhindert viele unnötige Finnhub-Abfragen.
-    """
-    global ECONOMIC_CACHE
+    Finnhub Economic Calendar liefert meist date + time.
+    Wir interpretieren diese Zeit als UTC und rechnen sie nach Europe/Berlin um.
 
-    if ECONOMIC_CACHE is not None:
-        return ECONOMIC_CACHE
+    Wichtig:
+    Auch 00:00:00 wird als echte Zeit behandelt, weil Finnhub manchmal
+    mehrere Events um 00:00, 00:01, 00:30 usw. liefert.
+    """
+    event_date = str(event.get("date", "") or "").strip()
+    event_time = str(event.get("time", "") or "").strip()
+
+    if not event_date and not event_time:
+        return None
+
+    raw = f"{event_date} {event_time}".strip()
+
+    formats = [
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M",
+        "%Y-%m-%d",
+        "%H:%M:%S",
+        "%H:%M",
+    ]
+
+    for fmt in formats:
+        try:
+            parsed = datetime.strptime(raw, fmt)
+
+            # Falls nur eine Uhrzeit ohne Datum geliefert wird
+            if parsed.year == 1900:
+                today = datetime.now(TIMEZONE).date()
+                parsed = parsed.replace(
+                    year=today.year,
+                    month=today.month,
+                    day=today.day,
+                )
+
+            # Finnhub-Zeit als UTC interpretieren und nach deutscher Zeit umrechnen
+            parsed_utc = parsed.replace(tzinfo=UTC_TZ)
+            return parsed_utc.astimezone(TIMEZONE)
+
+        except Exception:
+            continue
+
+    return None
+
+
+def _event_datetime_text(event):
+    dt_de = _parse_event_datetime_de(event)
+
+    if dt_de:
+        return dt_de.strftime("%d.%m.%Y %H:%M Uhr DE")
+
+    event_time = str(event.get("time", "") or "").strip()
+    event_date = str(event.get("date", "") or "").strip()
+
+    if event_time and event_date:
+        return f"{event_date} {event_time} laut Finnhub"
+
+    if event_time:
+        return f"{event_time} laut Finnhub"
+
+    if event_date:
+        return f"{event_date} laut Finnhub"
+
+    return ""
+
+
+def _event_is_relevant_time(event, days_ahead=2):
+    """
+    True nur wenn:
+    - Event liegt noch in der Zukunft
+    - oder Event war maximal EVENT_PAST_WINDOW_MINUTES Minuten her
+
+    Dadurch verschwinden alte Events vom Morgen/Tag aus der Übersicht.
+    """
+    dt_de = _parse_event_datetime_de(event)
+
+    if not dt_de:
+        # Wenn keine Zeit parsebar ist, lieber nicht anzeigen,
+        # damit keine alten/unklaren Events stören.
+        return False
+
+    now = datetime.now(TIMEZONE)
+    earliest_allowed = now - timedelta(minutes=EVENT_PAST_WINDOW_MINUTES)
+    latest_allowed = now + timedelta(days=days_ahead)
+
+    return earliest_allowed <= dt_de <= latest_allowed
+
+
+def _get_economic_calendar_data(days_ahead=2):
+    """
+    Economic Calendar wird pro days_ahead gecacht.
+    """
+    cache_key = f"economic_{days_ahead}"
+
+    if cache_key in ECONOMIC_CACHE:
+        return ECONOMIC_CACHE[cache_key]
 
     now = datetime.now(TIMEZONE)
     start = now.date().isoformat()
     end = (now.date() + timedelta(days=days_ahead)).isoformat()
 
-    ECONOMIC_CACHE = _request_json("/calendar/economic", {"from": start, "to": end})
-    return ECONOMIC_CACHE
+    data = _request_json("/calendar/economic", {"from": start, "to": end})
+    ECONOMIC_CACHE[cache_key] = data
+    return data
 
 
 def _get_market_news_data(category):
-    """
-    Market News pro Kategorie cachen.
-    """
     if category in MARKET_NEWS_CACHE:
         return MARKET_NEWS_CACHE[category]
 
@@ -184,9 +256,6 @@ def _get_market_news_data(category):
 
 
 def _get_company_news_data(ticker):
-    """
-    Company News pro Ticker cachen.
-    """
     if ticker in COMPANY_NEWS_CACHE:
         return COMPANY_NEWS_CACHE[ticker]
 
@@ -201,8 +270,9 @@ def _get_company_news_data(ticker):
 
 def get_economic_calendar_risk():
     """
-    Prüft wichtige Makroevents heute und morgen.
-    Wird im Trading-Score verwendet.
+    Prüft wichtige Makroevents.
+    Es werden nur Events berücksichtigt, die noch bevorstehen
+    oder maximal EVENT_PAST_WINDOW_MINUTES Minuten zurückliegen.
     """
     data = _get_economic_calendar_data(days_ahead=1)
 
@@ -220,6 +290,9 @@ def get_economic_calendar_risk():
     score = 0
 
     for event in events:
+        if not _event_is_relevant_time(event, days_ahead=1):
+            continue
+
         event_name = str(event.get("event", "") or "").strip()
         country = str(event.get("country", "") or "").strip()
         impact = str(event.get("impact", "") or "").strip()
@@ -227,12 +300,15 @@ def get_economic_calendar_risk():
         combined = " ".join([event_name, country, impact]).strip()
         level = _impact_level_from_event(event)
 
+        when = _event_datetime_text(event)
+        when_part = f"{when} - " if when else ""
+
         if level == "Hoch":
             score += 3
-            reasons.append(f"Heute/kurzfristig wichtiges Makroevent: {_clean_title(combined)}")
+            reasons.append(f"{when_part}Wichtiges Makroevent: {_clean_title(combined)}")
         elif level == "Mittel":
             score += 1
-            reasons.append(f"Makroevent im Blick behalten: {_clean_title(combined)}")
+            reasons.append(f"{when_part}Makroevent im Blick behalten: {_clean_title(combined)}")
 
     return {
         "score": min(score, 6),
@@ -386,7 +462,10 @@ def get_news_risk(asset):
 def get_upcoming_important_events(days_ahead=2):
     """
     Wird von session_alerts.py beim manuellen Workflow-Start genutzt.
-    Gibt kommende wichtige Makro-Events für die Börsenstatus-Nachricht zurück.
+
+    Gibt nur Events zurück, die:
+    - noch bevorstehen
+    - oder maximal EVENT_PAST_WINDOW_MINUTES Minuten zurückliegen
     """
     if not FINNHUB_API_KEY:
         return {
@@ -408,6 +487,9 @@ def get_upcoming_important_events(days_ahead=2):
     important = []
 
     for event in events:
+        if not _event_is_relevant_time(event, days_ahead=days_ahead):
+            continue
+
         event_name = str(event.get("event", "") or "").strip()
         country = str(event.get("country", "") or "").strip()
         impact = str(event.get("impact", "") or "").strip()
@@ -430,7 +512,7 @@ def get_upcoming_important_events(days_ahead=2):
     if not important:
         return {
             "level": "Niedrig",
-            "events": ["Keine wichtigen Makro-Events in den nächsten Tagen erkannt."],
+            "events": ["Keine wichtigen Makro-Events mehr in den nächsten Tagen erkannt."],
         }
 
     unique_events = []
