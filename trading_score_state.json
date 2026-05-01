@@ -74,25 +74,25 @@
   "BTC:1H:LONG": {
     "active": false,
     "last_score": 53,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "BTC:1H:SHORT": {
     "active": false,
     "last_score": 43,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "BTC:4H:LONG": {
     "active": false,
-    "last_score": 61,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 54,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "BTC:4H:SHORT": {
     "active": false,
-    "last_score": 26,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 41,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "BTC:1D:LONG": {
@@ -145,26 +145,26 @@
   },
   "ETH:1H:LONG": {
     "active": false,
-    "last_score": 46,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "last_score": 51,
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "ETH:1H:SHORT": {
     "active": false,
-    "last_score": 45,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "last_score": 40,
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "ETH:4H:LONG": {
     "active": false,
-    "last_score": 61,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 58,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "ETH:4H:SHORT": {
     "active": false,
-    "last_score": 21,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 25,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "ETH:1D:LONG": {
@@ -181,26 +181,26 @@
   },
   "EURUSD:1H:LONG": {
     "active": false,
-    "last_score": 52,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "last_score": 42,
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "EURUSD:1H:SHORT": {
     "active": false,
-    "last_score": 42,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "last_score": 38,
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "EURUSD:4H:LONG": {
     "active": false,
-    "last_score": 62,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 46,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "EURUSD:4H:SHORT": {
     "active": false,
-    "last_score": 24,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 37,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "EURUSD:1D:LONG": {
@@ -217,26 +217,26 @@
   },
   "GBPUSD:1H:LONG": {
     "active": false,
-    "last_score": 51,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "last_score": 46,
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "GBPUSD:1H:SHORT": {
     "active": false,
-    "last_score": 43,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "last_score": 34,
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "GBPUSD:4H:LONG": {
     "active": false,
-    "last_score": 45,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 40,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "GBPUSD:4H:SHORT": {
     "active": false,
-    "last_score": 42,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 40,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "GBPUSD:1D:LONG": {
@@ -469,26 +469,26 @@
   },
   "SOL:1H:LONG": {
     "active": false,
-    "last_score": 39,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "last_score": 44,
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "SOL:1H:SHORT": {
     "active": false,
-    "last_score": 63,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "last_score": 61,
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "SOL:4H:LONG": {
     "active": false,
-    "last_score": 40,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 33,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "SOL:4H:SHORT": {
     "active": false,
-    "last_score": 46,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 56,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "SOL:1D:LONG": {
@@ -541,38 +541,38 @@
   },
   "USDJPY:1H:LONG": {
     "active": false,
-    "last_score": 44,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "last_score": 39,
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "USDJPY:1H:SHORT": {
     "active": false,
-    "last_score": 54,
-    "candle_time": "2026-05-01 18:00:00+00:00",
+    "last_score": 49,
+    "candle_time": "2026-05-01 19:00:00+00:00",
     "last_alert_at": null
   },
   "USDJPY:4H:LONG": {
     "active": false,
-    "last_score": 54,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 41,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "USDJPY:4H:SHORT": {
     "active": false,
-    "last_score": 51,
-    "candle_time": "2026-05-01 12:00:00+00:00",
+    "last_score": 46,
+    "candle_time": "2026-05-01 16:00:00+00:00",
     "last_alert_at": null
   },
   "USDJPY:1D:LONG": {
     "active": false,
-    "last_score": 54,
-    "candle_time": "2026-04-29 00:00:00",
+    "last_score": 41,
+    "candle_time": "2026-04-30 00:00:00",
     "last_alert_at": null
   },
   "USDJPY:1D:SHORT": {
     "active": false,
-    "last_score": 28,
-    "candle_time": "2026-04-29 00:00:00",
+    "last_score": 24,
+    "candle_time": "2026-04-30 00:00:00",
     "last_alert_at": null
   },
   "VWCE:1H:LONG": {
