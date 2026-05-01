@@ -6,10 +6,18 @@
     "is_open": false,
     "open": "02:00"
   },
-  "last_checked_at_local": "2026-05-01T12:52:32.432592+02:00",
+  "current_status": [
+    "⚪ <b>LSX / Trade Republic</b>: heute kein regulärer Handel",
+    "⚪ <b>Xetra / Europa</b>: heute kein regulärer Handel",
+    "⚪ <b>US-Börse</b>: geschlossen, öffnet 15:30"
+  ],
+  "events_sent": {},
+  "last_checked_at_local": "2026-05-01T13:06:41.197293+02:00",
+  "last_checked_at_utc": "2026-05-01T11:06:41.509632+00:00",
   "last_current_sessions": [
     "London"
   ],
+  "last_manual_summary_run_id": "25212129152",
   "london": {
     "checked_at_local": "2026-05-01T12:52:32.432592+02:00",
     "checked_at_utc": "2026-05-01T10:52:32.432720+00:00",
@@ -31,5 +39,17 @@
     "close": "08:00",
     "is_open": false,
     "open": "23:00"
-  }
+  },
+  "today_events": [
+    {
+      "key": "us_open",
+      "time_local": "2026-05-01T15:30:00+02:00",
+      "title": "US-Börse öffnet"
+    },
+    {
+      "key": "us_close",
+      "time_local": "2026-05-01T22:00:00+02:00",
+      "title": "US-Börse schließt"
+    }
+  ]
 }
