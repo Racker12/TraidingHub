@@ -12,12 +12,12 @@
     "🟢 <b>US-Börse</b>: offen bis 22:00"
   ],
   "events_sent": {},
-  "last_checked_at_local": "2026-05-01T21:45:35.514303+02:00",
-  "last_checked_at_utc": "2026-05-01T19:45:35.514592+00:00",
+  "last_checked_at_local": "2026-05-01T21:52:10.400884+02:00",
+  "last_checked_at_utc": "2026-05-01T19:52:10.867700+00:00",
   "last_current_sessions": [
     "London"
   ],
-  "last_manual_summary_run_id": "25229811535",
+  "last_manual_summary_run_id": "25230362482",
   "london": {
     "checked_at_local": "2026-05-01T12:52:32.432592+02:00",
     "checked_at_utc": "2026-05-01T10:52:32.432720+00:00",
