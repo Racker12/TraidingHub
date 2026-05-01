@@ -1,14 +1,14 @@
 {
   "AMZ:1H:LONG": {
     "active": false,
-    "last_score": 53,
-    "candle_time": "2026-05-01 17:30:00+00:00",
+    "last_score": 48,
+    "candle_time": "2026-05-01 18:30:00+00:00",
     "last_alert_at": null
   },
   "AMZ:1H:SHORT": {
     "active": false,
-    "last_score": 32,
-    "candle_time": "2026-05-01 17:30:00+00:00",
+    "last_score": 36,
+    "candle_time": "2026-05-01 18:30:00+00:00",
     "last_alert_at": null
   },
   "AMZ:4H:LONG": {
@@ -38,13 +38,13 @@
   "APC:1H:LONG": {
     "active": false,
     "last_score": 50,
-    "candle_time": "2026-05-01 17:30:00+00:00",
+    "candle_time": "2026-05-01 18:30:00+00:00",
     "last_alert_at": null
   },
   "APC:1H:SHORT": {
     "active": false,
     "last_score": 34,
-    "candle_time": "2026-05-01 17:30:00+00:00",
+    "candle_time": "2026-05-01 18:30:00+00:00",
     "last_alert_at": null
   },
   "APC:4H:LONG": {
@@ -565,14 +565,14 @@
   },
   "USDJPY:1D:LONG": {
     "active": false,
-    "last_score": 46,
-    "candle_time": "2026-04-30 00:00:00",
+    "last_score": 54,
+    "candle_time": "2026-04-29 00:00:00",
     "last_alert_at": null
   },
   "USDJPY:1D:SHORT": {
     "active": false,
-    "last_score": 29,
-    "candle_time": "2026-04-30 00:00:00",
+    "last_score": 28,
+    "candle_time": "2026-04-29 00:00:00",
     "last_alert_at": null
   },
   "VWCE:1H:LONG": {
