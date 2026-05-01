@@ -1,5 +1,6 @@
 import os
 import re
+import time
 import requests
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -7,6 +8,13 @@ from zoneinfo import ZoneInfo
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY", "").strip()
 BASE_URL = "https://finnhub.io/api/v1"
 TIMEZONE = ZoneInfo("Europe/Berlin")
+
+REQUEST_TIMEOUT = 45
+REQUEST_RETRIES = 3
+
+ECONOMIC_CACHE = None
+MARKET_NEWS_CACHE = {}
+COMPANY_NEWS_CACHE = {}
 
 HIGH_IMPACT_KEYWORDS = [
     "cpi", "inflation", "consumer price index",
@@ -57,24 +65,44 @@ ASSET_KEYWORDS = {
 }
 
 
-def _request_json(path, params=None, timeout=20):
+def _request_json(path, params=None, timeout=REQUEST_TIMEOUT):
+    """
+    Robuste Finnhub-Abfrage:
+    - längerer Timeout
+    - mehrere Versuche
+    - kleine Pause zwischen Versuchen
+    """
     if not FINNHUB_API_KEY:
         return {"_error": "missing_api_key"}
 
     params = params or {}
     params["token"] = FINNHUB_API_KEY
 
-    try:
-        response = requests.get(f"{BASE_URL}{path}", params=params, timeout=timeout)
+    last_error = None
 
-        if response.status_code == 429:
-            return {"_error": "rate_limit"}
+    for attempt in range(1, REQUEST_RETRIES + 1):
+        try:
+            response = requests.get(
+                f"{BASE_URL}{path}",
+                params=params,
+                timeout=timeout,
+            )
 
-        response.raise_for_status()
-        return response.json()
+            if response.status_code == 429:
+                return {"_error": "rate_limit"}
 
-    except Exception as exc:
-        return {"_error": str(exc)}
+            response.raise_for_status()
+            return response.json()
+
+        except requests.exceptions.Timeout:
+            last_error = f"timeout_attempt_{attempt}"
+            time.sleep(2 * attempt)
+
+        except Exception as exc:
+            last_error = str(exc)
+            time.sleep(1 * attempt)
+
+    return {"_error": last_error or "unknown_error"}
 
 
 def _text_contains_any(text, keywords):
@@ -125,23 +153,65 @@ def _impact_level_from_event(event):
     return "Niedrig"
 
 
+def _get_economic_calendar_data(days_ahead=1):
+    """
+    Economic Calendar wird gecacht, damit er pro Bot-Lauf nur einmal geladen wird.
+    Das verhindert viele unnötige Finnhub-Abfragen.
+    """
+    global ECONOMIC_CACHE
+
+    if ECONOMIC_CACHE is not None:
+        return ECONOMIC_CACHE
+
+    now = datetime.now(TIMEZONE)
+    start = now.date().isoformat()
+    end = (now.date() + timedelta(days=days_ahead)).isoformat()
+
+    ECONOMIC_CACHE = _request_json("/calendar/economic", {"from": start, "to": end})
+    return ECONOMIC_CACHE
+
+
+def _get_market_news_data(category):
+    """
+    Market News pro Kategorie cachen.
+    """
+    if category in MARKET_NEWS_CACHE:
+        return MARKET_NEWS_CACHE[category]
+
+    data = _request_json("/news", {"category": category})
+    MARKET_NEWS_CACHE[category] = data
+    return data
+
+
+def _get_company_news_data(ticker):
+    """
+    Company News pro Ticker cachen.
+    """
+    if ticker in COMPANY_NEWS_CACHE:
+        return COMPANY_NEWS_CACHE[ticker]
+
+    now = datetime.now(TIMEZONE)
+    start = (now.date() - timedelta(days=2)).isoformat()
+    end = now.date().isoformat()
+
+    data = _request_json("/company-news", {"symbol": ticker, "from": start, "to": end})
+    COMPANY_NEWS_CACHE[ticker] = data
+    return data
+
+
 def get_economic_calendar_risk():
     """
     Prüft wichtige Makroevents heute und morgen.
     Wird im Trading-Score verwendet.
     """
-    now = datetime.now(TIMEZONE)
-    start = now.date().isoformat()
-    end = (now.date() + timedelta(days=1)).isoformat()
-
-    data = _request_json("/calendar/economic", {"from": start, "to": end})
+    data = _get_economic_calendar_data(days_ahead=1)
 
     if not data or isinstance(data, dict) and data.get("_error"):
         error = data.get("_error") if isinstance(data, dict) else "unknown"
         return {
             "score": 0,
             "level": "Unbekannt",
-            "reasons": [f"Finnhub Economic Calendar konnte nicht geladen werden: {error}"],
+            "reasons": [f"Finnhub Economic Calendar temporär nicht erreichbar: {error}"],
         }
 
     events = data.get("economicCalendar", []) if isinstance(data, dict) else []
@@ -179,15 +249,10 @@ def get_company_news_risk(asset):
     ticker = asset.get("ticker", "")
     key = asset.get("key", "")
 
-    # Kein Company-News-Call für Forex, Futures, Crypto-Paare oder europäische/asiatische Ticker.
     if ticker.endswith("=X") or ticker.endswith("=F") or "-" in ticker or "." in ticker:
         return {"score": 0, "level": "Niedrig", "reasons": []}
 
-    now = datetime.now(TIMEZONE)
-    start = (now.date() - timedelta(days=2)).isoformat()
-    end = now.date().isoformat()
-
-    data = _request_json("/company-news", {"symbol": ticker, "from": start, "to": end})
+    data = _get_company_news_data(ticker)
 
     if not data or isinstance(data, dict) and data.get("_error"):
         return {"score": 0, "level": "Unbekannt", "reasons": []}
@@ -238,7 +303,7 @@ def get_market_news_risk(asset):
     score = 0
 
     for category in categories:
-        data = _request_json("/news", {"category": category})
+        data = _get_market_news_data(category)
 
         if not data or isinstance(data, dict) and data.get("_error"):
             continue
@@ -265,7 +330,6 @@ def get_market_news_risk(asset):
                 score += 1
                 reasons.append(f"Makro/Markt-News relevant: {_clean_title(headline)}")
 
-    # Doppelte News entfernen, Reihenfolge behalten
     unique_reasons = []
     for reason in reasons:
         if reason not in unique_reasons:
@@ -330,17 +394,13 @@ def get_upcoming_important_events(days_ahead=2):
             "events": ["FINNHUB_API_KEY fehlt. Makro-News konnten nicht geprüft werden."],
         }
 
-    now = datetime.now(TIMEZONE)
-    start = now.date().isoformat()
-    end = (now.date() + timedelta(days=days_ahead)).isoformat()
-
-    data = _request_json("/calendar/economic", {"from": start, "to": end})
+    data = _get_economic_calendar_data(days_ahead=days_ahead)
 
     if not data or isinstance(data, dict) and data.get("_error"):
         error = data.get("_error") if isinstance(data, dict) else "unknown"
         return {
             "level": "Unbekannt",
-            "events": [f"Economic Calendar konnte nicht geladen werden: {error}"],
+            "events": [f"Economic Calendar temporär nicht erreichbar: {error}"],
         }
 
     events = data.get("economicCalendar", []) if isinstance(data, dict) else []
@@ -352,7 +412,6 @@ def get_upcoming_important_events(days_ahead=2):
         country = str(event.get("country", "") or "").strip()
         impact = str(event.get("impact", "") or "").strip()
 
-        combined = " ".join([event_name, country, impact]).strip()
         level = _impact_level_from_event(event)
 
         if level not in ["Hoch", "Mittel"]:
@@ -374,7 +433,6 @@ def get_upcoming_important_events(days_ahead=2):
             "events": ["Keine wichtigen Makro-Events in den nächsten Tagen erkannt."],
         }
 
-    # Doppelte entfernen
     unique_events = []
     for item in important:
         if item not in unique_events:
