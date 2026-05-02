@@ -73,26 +73,26 @@
   },
   "BTC:1H:LONG": {
     "active": false,
-    "last_score": 52,
-    "candle_time": "2026-05-01 22:00:00+00:00",
+    "last_score": 60,
+    "candle_time": "2026-05-02 00:00:00+00:00",
     "last_alert_at": null
   },
   "BTC:1H:SHORT": {
     "active": false,
-    "last_score": 45,
-    "candle_time": "2026-05-01 22:00:00+00:00",
+    "last_score": 36,
+    "candle_time": "2026-05-02 00:00:00+00:00",
     "last_alert_at": null
   },
   "BTC:4H:LONG": {
     "active": false,
     "last_score": 54,
-    "candle_time": "2026-05-01 16:00:00+00:00",
+    "candle_time": "2026-05-01 20:00:00+00:00",
     "last_alert_at": null
   },
   "BTC:4H:SHORT": {
     "active": false,
-    "last_score": 41,
-    "candle_time": "2026-05-01 16:00:00+00:00",
+    "last_score": 34,
+    "candle_time": "2026-05-01 20:00:00+00:00",
     "last_alert_at": null
   },
   "BTC:1D:LONG": {
@@ -145,26 +145,26 @@
   },
   "ETH:1H:LONG": {
     "active": false,
-    "last_score": 48,
-    "candle_time": "2026-05-01 22:00:00+00:00",
+    "last_score": 44,
+    "candle_time": "2026-05-02 00:00:00+00:00",
     "last_alert_at": null
   },
   "ETH:1H:SHORT": {
     "active": false,
-    "last_score": 48,
-    "candle_time": "2026-05-01 22:00:00+00:00",
+    "last_score": 51,
+    "candle_time": "2026-05-02 00:00:00+00:00",
     "last_alert_at": null
   },
   "ETH:4H:LONG": {
     "active": false,
-    "last_score": 58,
-    "candle_time": "2026-05-01 16:00:00+00:00",
+    "last_score": 48,
+    "candle_time": "2026-05-01 20:00:00+00:00",
     "last_alert_at": null
   },
   "ETH:4H:SHORT": {
     "active": false,
-    "last_score": 25,
-    "candle_time": "2026-05-01 16:00:00+00:00",
+    "last_score": 33,
+    "candle_time": "2026-05-01 20:00:00+00:00",
     "last_alert_at": null
   },
   "ETH:1D:LONG": {
@@ -469,26 +469,26 @@
   },
   "SOL:1H:LONG": {
     "active": false,
-    "last_score": 41,
-    "candle_time": "2026-05-01 22:00:00+00:00",
+    "last_score": 48,
+    "candle_time": "2026-05-02 00:00:00+00:00",
     "last_alert_at": null
   },
   "SOL:1H:SHORT": {
     "active": false,
-    "last_score": 60,
-    "candle_time": "2026-05-01 22:00:00+00:00",
+    "last_score": 55,
+    "candle_time": "2026-05-02 00:00:00+00:00",
     "last_alert_at": null
   },
   "SOL:4H:LONG": {
     "active": false,
     "last_score": 33,
-    "candle_time": "2026-05-01 16:00:00+00:00",
+    "candle_time": "2026-05-01 20:00:00+00:00",
     "last_alert_at": null
   },
   "SOL:4H:SHORT": {
     "active": false,
-    "last_score": 56,
-    "candle_time": "2026-05-01 16:00:00+00:00",
+    "last_score": 53,
+    "candle_time": "2026-05-01 20:00:00+00:00",
     "last_alert_at": null
   },
   "SOL:1D:LONG": {
